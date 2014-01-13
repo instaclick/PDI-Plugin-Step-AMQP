@@ -11,7 +11,7 @@ All you'll need to get started is maven.
     $ mvn package
 
 
-This will produce a pentaho plugin in ``target/plugin``
+This will produce a pentaho plugin in ``target/ic-amqp-plugin-pdi-<version>.tar``
 This archive can then be extracted into your Pentaho Data Integration plugin directory.
 
 
