@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin
+    id="IC AMQP Plugin"
+    iconfile="logo.png"
+    description="IC AMQP Plugin"
+    tooltip="IC AMQP Plugin"
+    category="Transform"
+    classname="net.nationalfibre.pentaho.plugin.amqp.AMQPPluginMeta">
+
+    <libraries>
+        <library name="ic-amqp-plugin.jar"/>
+    </libraries>Ï
+
+    <localized_category>
+        <category locale="en_US">Transform</category>
+    </localized_category>
+
+    <localized_description>
+        <description locale="en_US">IC AMQP Plugin</description>
+    </localized_description>
+
+    <localized_tooltip>
+        <tooltip locale="en_US">IC AMQP Plugin</tooltip>
+    </localized_tooltip>
+</plugin>
