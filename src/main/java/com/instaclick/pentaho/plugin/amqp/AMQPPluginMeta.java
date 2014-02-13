@@ -1,4 +1,4 @@
-package net.nationalfibre.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp;
 
 import java.util.List;
 import java.util.Map;

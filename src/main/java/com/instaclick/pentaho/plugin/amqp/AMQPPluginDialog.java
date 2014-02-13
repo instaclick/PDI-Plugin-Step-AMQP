@@ -1,4 +1,4 @@
-package net.nationalfibre.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +27,7 @@ import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStepMeta;
 import org.pentaho.di.trans.step.StepDialogInterface;
 import org.pentaho.di.ui.trans.step.BaseStepDialog;
-import static net.nationalfibre.pentaho.plugin.amqp.Messages.getString;
+import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
 
 public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterface
 {

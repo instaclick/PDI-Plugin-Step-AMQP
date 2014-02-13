@@ -1,4 +1,4 @@
-package net.nationalfibre.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp;
 
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;

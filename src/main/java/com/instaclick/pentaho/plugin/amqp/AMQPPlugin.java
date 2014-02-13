@@ -1,4 +1,4 @@
-package net.nationalfibre.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -15,7 +15,7 @@ import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
-import static net.nationalfibre.pentaho.plugin.amqp.Messages.getString;
+import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;

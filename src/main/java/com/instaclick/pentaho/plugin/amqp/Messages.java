@@ -1,4 +1,4 @@
-package net.nationalfibre.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp;
 
 import org.pentaho.di.i18n.BaseMessages;
 
