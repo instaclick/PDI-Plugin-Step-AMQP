@@ -6,7 +6,7 @@ Building
 The IC AMQP Plugin is built with maven for dependency management.
 All you'll need to get started is maven.
 
-    $ git clone git@github.com:instaclick/PDI-Plugin-Step-AMQP.git
+    $ git clone https://github.com/instaclick/PDI-Plugin-Step-AMQP.git
     $ cd PDI-Plugin-Step-AMQP
     $ mvn package
 
