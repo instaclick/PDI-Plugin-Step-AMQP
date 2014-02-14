@@ -15,6 +15,11 @@ This will produce a pentaho plugin in ``target/ic-amqp-plugin-pdi-<version>.tar`
 This archive can then be extracted into your Pentaho Data Integration plugin directory.
 
 
+Compile Packages
+----------------
+https://github.com/instaclick/pdi-marketplace-packages
+
+
 PDI Step Configuration
 -----------------------
 
