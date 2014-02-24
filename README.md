@@ -31,3 +31,11 @@ PDI Step Configuration
 | Exchange/Queue name   | The exchange name for producers or queue name for consumers                   |
 | Routing key           | Field that store the routing key                                              |
 | Limit                 | Max number of message reads when using as consumer                            |
+
+
+
+Limitations
+-----------
+
+* This plugin does not create any queue/exchange nor bindings. 
+* Queue, Exchange and Binding should be created before using the plugin
