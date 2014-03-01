@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.instaclick</groupId>
     <artifactId>ic-amqp-plugin</artifactId>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.1-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>ic-amqp-plugin</name>
     <properties>
@@ -141,10 +141,10 @@
                         <phase>package</phase>
                         <configuration>
                             <target name="package-amqp-plugin">
-                                <delete dir="${project.plugin.deploy}"/>
-                                <mkdir dir="${project.plugin.deploy}"/>
-                                <copy tofile="${project.plugin.deploy}/ic-amqp-plugin.jar" file="${project.build.directory}/${project.build.finalName}-dep.jar" />
-                                <copy todir="${project.plugin.deploy}">
+                                <delete dir="${project.plugin.deploy}/ic-amqp-plugin"/>
+                                <mkdir dir="${project.plugin.deploy}/ic-amqp-plugin"/>
+                                <copy tofile="${project.plugin.deploy}/ic-amqp-plugin/ic-amqp-plugin.jar" file="${project.build.directory}/${project.build.finalName}-dep.jar" />
+                                <copy todir="${project.plugin.deploy}/ic-amqp-plugin">
                                     <fileset dir="${basedir}/src/main/resources">
                                         <include name="**/*.*" />
                                     </fileset>
