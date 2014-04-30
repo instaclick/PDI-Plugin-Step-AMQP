@@ -1,0 +1,137 @@
+
+package com.instaclick.pentaho.plugin.amqp.processor;
+
+import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
+import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
+import com.rabbitmq.client.Channel;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.junit.Before;
+import static org.mockito.Mockito.*;
+import org.pentaho.di.core.row.RowMetaInterface;
+
+public class AbstractProcessorTest
+{
+    AMQPPluginData data;
+    AMQPPlugin plugin;
+    Channel channel;
+
+    @Before
+    public void setUp()
+    {
+        channel     = mock(Channel.class, RETURNS_MOCKS);
+        data        = mock(AMQPPluginData.class);
+        plugin      = mock(AMQPPlugin.class);
+    }
+
+    @Test
+    public void testGetAmqpRoutingKey() throws Exception
+    {
+        final String value                  = null;
+        final String key                    = "amqp_routing_key";
+        final Object[] row                  = new Object[] {key, value};
+        final AbstractProcessor processor   = new AbstractProcessorImpl(channel, plugin, data);
+
+        data.routingIndex   = 0;
+        data.bodyFieldIndex = 1;
+
+        assertEquals(key, processor.getAmqpRoutingKey(row));
+    }
+
+    @Test
+    public void testGetAmqpBody() throws Exception
+    {
+        final String key                    = "amqp_routing_key";
+        final String value                  = "amqp_body";
+        final Object[] row                  = new Object[] {key, value};
+        final AbstractProcessor processor   = new AbstractProcessorImpl(channel, plugin, data);
+
+        data.routingIndex   = 0;
+        data.bodyFieldIndex = 1;
+
+        assertEquals(value, processor.getAmqpBody(row));
+    }
+
+    @Test
+    public void testGetInvalidAmqpRoutingKey() throws Exception
+    {
+        final String key                    = "amqp_routing_key";
+        final Object[] row                  = new Object[] {key};
+        final RowMetaInterface meta         = mock(RowMetaInterface.class);
+        final AbstractProcessor processor   = new AbstractProcessorImpl(channel, plugin, data);
+
+        data.routingIndex   = 3;
+        data.bodyFieldIndex = 1;
+
+        when(plugin.isDebug()).thenReturn(true);
+        when(plugin.getLinesRead()).thenReturn(1L);
+        when(plugin.getInputRowMeta()).thenReturn(meta);
+
+        assertNull(processor.getAmqpRoutingKey(row));
+        verify(plugin).putError(eq(meta), eq(row), eq(1L), eq("1 - Invalid routing key"), isNull(String.class), eq("ICAmqpPlugin001"));
+    }
+
+    public void testGetInvalidAmqpBody() throws Exception
+    {
+        final String key                    = "amqp_routing_key";
+        final String value                  = "amqp_body";
+        final Object[] row                  = new Object[] {key, value};
+        final RowMetaInterface meta         = mock(RowMetaInterface.class);
+        final AbstractProcessor processor   = new AbstractProcessorImpl(channel, plugin, data);
+
+        data.routingIndex   = 0;
+        data.bodyFieldIndex = 2;
+
+        when(plugin.isDebug()).thenReturn(true);
+        when(plugin.getLinesRead()).thenReturn(1L);
+        when(plugin.getInputRowMeta()).thenReturn(meta);
+
+        assertNull(processor.getAmqpBody(row));
+        verify(plugin).putError(eq(meta), eq(row), eq(1L), eq("1 - Invalid value row"), isNull(String.class), eq("ICRiakPlugin002"));
+    }
+
+    @Test
+    public void testGetNullKeyValue() throws Exception
+    {
+        final Object[] row                  = new Object[] {null, null};
+        final RowMetaInterface meta         = mock(RowMetaInterface.class);
+        final AbstractProcessor processor   = new AbstractProcessorImpl(channel, plugin, data);
+
+        data.routingIndex   = 0;
+        data.bodyFieldIndex = 1;
+
+        when(plugin.isDebug()).thenReturn(true);
+        when(plugin.getLinesRead()).thenReturn(1L);
+        when(plugin.getInputRowMeta()).thenReturn(meta);
+
+        assertNull(processor.getAmqpRoutingKey(row));
+        assertNull(processor.getAmqpBody(row));
+        verify(plugin, never()).putError(any(RowMetaInterface.class), any(Object[].class), any(Long.class), any(String.class), any(String.class), any(String.class));
+    }
+
+    public class AbstractProcessorImpl extends AbstractProcessor
+    {
+        public AbstractProcessorImpl(final Channel channel, final AMQPPlugin plugin, final AMQPPluginData data)
+        {
+            super(channel, plugin, data);
+        }
+
+        @Override
+        public boolean process(Object[] r) throws Exception
+        {
+            return true;
+        }
+
+        @Override
+        public void onSuccess() throws Exception 
+        {
+
+        }
+
+        @Override
+        public void onFailure() throws Exception 
+        {
+
+        }
+    }
+}

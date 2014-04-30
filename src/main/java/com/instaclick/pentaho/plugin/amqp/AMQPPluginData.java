@@ -19,6 +19,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public String body = null;
     public String routing;
     public String target;
+    public String uri;
     public long amqpTag;
     public Long limit;
     public long count = 0;
