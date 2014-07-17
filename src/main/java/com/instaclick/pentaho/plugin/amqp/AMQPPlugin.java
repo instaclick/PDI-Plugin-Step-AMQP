@@ -64,6 +64,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         if (first) {
             first = false;
 
+            if (AMQPPluginData.MODE_PRODUCER.equals(meta.getMode()) && r == null) {
+                setOutputDone();
+                return false;
+            }
+
             try {
                 initFilter();
             } catch (Exception e) {
