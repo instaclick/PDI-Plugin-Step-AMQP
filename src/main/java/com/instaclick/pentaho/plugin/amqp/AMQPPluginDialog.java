@@ -27,6 +27,7 @@ import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStepMeta;
 import org.pentaho.di.trans.step.StepDialogInterface;
 import org.pentaho.di.ui.trans.step.BaseStepDialog;
+import org.pentaho.di.ui.core.widget.TextVar;
 import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
 
 public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterface
@@ -34,7 +35,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private AMQPPluginMeta input;
 
     private Label labelURI;
-    private Text textURI;
+    private TextVar textURI;
     private FormData formURILabel;
     private FormData formURIText;
 
@@ -44,12 +45,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formModeCombo;
 
     private Label labelTarget;
-    private Text textTarget;
+    private TextVar textTarget;
     private FormData formTargetLabel;
     private FormData formTargetText;
 
     private Label labelRouting;
-    private Text textRouting;
+    private TextVar textRouting;
     private FormData formRoutingLabel;
     private FormData formRoutingText;
 
@@ -59,7 +60,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formLimitText;
 
     private Label labelBodyField;
-    private Text textBodyField;
+    private TextVar textBodyField;
     private FormData formBodyLabel;
     private FormData formBodyText;
 
@@ -190,7 +191,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         labelURI.setLayoutData(formURILabel);
 
-        textURI = new Text(shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+        textURI = new TextVar(transMeta, shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
 
         props.setLook(textURI);
         textURI.addModifyListener(modifyListener);
@@ -237,7 +238,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         labelBodyField.setLayoutData(formBodyLabel);
 
-        textBodyField = new Text(shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+        textBodyField = new TextVar(transMeta, shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
 
         props.setLook(textBodyField);
         textBodyField.addModifyListener(modifyListener);
@@ -261,7 +262,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         labelTarget.setLayoutData(formTargetLabel);
 
-        textTarget = new Text(shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+        textTarget = new TextVar(transMeta, shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
 
         props.setLook(textTarget);
         textTarget.addModifyListener(modifyListener);
@@ -285,7 +286,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         labelRouting.setLayoutData(formRoutingLabel);
 
-        textRouting = new Text(shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+        textRouting = new TextVar(transMeta, shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
 
         props.setLook(textRouting);
         textRouting.addModifyListener(modifyListener);

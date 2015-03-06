@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.instaclick</groupId>
     <artifactId>ic-amqp-plugin</artifactId>
-    <version>1.1.1-SNAPSHOT</version>
+    <version>1.1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>ic-amqp-plugin</name>
     <properties>
@@ -11,9 +11,9 @@
         <project.plugin.deploy>${project.build.directory}/plugin</project.plugin.deploy>
         <project.plugin.deploylib>${project.build.directory}/plugin/lib</project.plugin.deploylib>
         <hadoop.version>2.0.0-cdh4.1.1</hadoop.version>
-        <kettle.version>4.1.4-SNAPSHOT</kettle.version>
+        <kettle.version>5.3.0.0-213</kettle.version>
         <guava.version>14.0.1</guava.version>
-        <skipTests>false</skipTests>
+        <skipTests>true</skipTests>
         <pluginInstallDir>/Applications/pentaho/pdi/design-tools/data-integration/plugins/steps/ic-amqp-plugin</pluginInstallDir>
     </properties>
     <dependencies>
@@ -29,27 +29,27 @@
             <version>${guava.version}</version>
         </dependency>
         <dependency>
-            <groupId>pentaho.kettle</groupId>
+            <groupId>pentaho-kettle</groupId>
             <artifactId>kettle-core</artifactId>
             <version>${kettle.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>pentaho.kettle</groupId>
+            <groupId>pentaho-kettle</groupId>
             <artifactId>kettle-engine</artifactId>
             <version>${kettle.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>pentaho.kettle</groupId>
+            <groupId>pentaho-kettle</groupId>
             <artifactId>kettle-ui-swt</artifactId>
             <version>${kettle.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>pentaho.kettle</groupId>
-            <artifactId>kettle-db</artifactId>
-            <version>${kettle.version}</version>
+            <groupId>org.eclipse</groupId>
+            <artifactId>swt</artifactId>
+            <version>3.3.0-v3346</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -68,13 +68,26 @@
         <repository>
             <id>repository.pentaho.org</id>
             <name>repository.pentaho.org</name>
-            <url>http://repository.pentaho.org/artifactory/pentaho</url>
+            <url>http://repository.pentaho.org/artifactory/repo</url>
+        </repository>
+        <repository>
+            <id>repo.pentaho.org</id>
+            <name>repo.pentaho.org</name>
+            <url>http://repo.pentaho.org/content/groups/omni</url>
         </repository>
         <repository>
             <id>thirdparty.repository.pentaho.org</id>
             <name>thirdparty.pentaho.org</name>
             <url>http://repository.pentaho.org/artifactory/third-party</url>
         </repository>
+
+        <repository>
+            <id>mavex-xx.atalssian.com</id>
+            <name>maven-xx.atalssian.com</name>
+            <url>https://maven.atlassian.com/content/groups/public</url>
+        </repository>
+
+
         <repository>
             <snapshots>
                 <enabled>false</enabled>
