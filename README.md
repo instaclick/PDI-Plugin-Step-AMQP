@@ -1,6 +1,8 @@
 IC AMQP Plugin
 ==============
 
+## Compatible with PDI/Kettle 4.x 
+
 Building
 --------
 The IC AMQP Plugin is built with maven for dependency management.
