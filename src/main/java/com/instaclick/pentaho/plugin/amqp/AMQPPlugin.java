@@ -31,6 +31,14 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     private Channel channel = null;
 
     private final TransListener transListener = new TransListener() {
+	    @Override
+	    public void transStarted( Trans trans ) throws KettleException {
+	    }
+
+	    @Override
+	    public void transActive( Trans trans ) {
+	    }
+
         @Override
         public void transFinished(Trans trans) throws KettleException
         {
