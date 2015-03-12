@@ -40,6 +40,20 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_MODE          = "mode";
     private static final String FIELD_URI           = "uri";
 
+    private static final String FIELD_USERNAME      = "username";
+    private static final String FIELD_PASSWORD      = "password";
+    private static final String FIELD_HOST          = "host";
+    private static final String FIELD_PORT          = "port";
+    private static final String FIELD_VHOST         = "vhost";
+    private static final String FIELD_USESSL = "usessl";
+
+    private static final String DEFAULT_USERNAME    = "guest";
+    private static final String DEFAULT_PASSWORD    = "guest";
+    private static final String DEFAULT_HOST        = "localhost";
+    private static final String DEFAULT_PORT        = "5672";
+    private static final String DEFAULT_VHOST       = "/";
+    private static final String DEFAULT_USESSL       = "N";
+
     private static final String DEFAULT_URI = "amqp://guest:guest@localhost:5672";
     private static final String DEFAULT_BODY_FIELD = "message";
 
@@ -50,6 +64,12 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private String routing;
     private String target;
     private Long limit;
+    private String username         = DEFAULT_USERNAME;
+    private String password         = DEFAULT_PASSWORD;
+    private String host             = DEFAULT_HOST;
+    private String port             = DEFAULT_PORT;
+    private String vhost            = DEFAULT_VHOST;
+    private boolean usessl   = false;
 
 
     public AMQPPluginMeta() {
@@ -121,6 +141,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_MODE, getMode()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_URI, getUri()));
 
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_USERNAME, getUsername()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_PASSWORD, getPassword()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_HOST, getHost()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_PORT, getPort()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_VHOST, getVhost()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_USESSL, isUseSsl()));
+
+
         return bufer.toString();
     }
 
@@ -135,6 +163,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setLimit(XMLHandler.getTagValue(stepnode, FIELD_LIMIT));
             setMode(XMLHandler.getTagValue(stepnode, FIELD_MODE));
             setUri(XMLHandler.getTagValue(stepnode, FIELD_URI));
+
+            setUsername(XMLHandler.getTagValue(stepnode, FIELD_USERNAME));
+            setPassword(XMLHandler.getTagValue(stepnode, FIELD_PASSWORD));
+            setHost(XMLHandler.getTagValue(stepnode, FIELD_HOST));
+            setPort(XMLHandler.getTagValue(stepnode, FIELD_PORT));
+            setVhost(XMLHandler.getTagValue(stepnode, FIELD_VHOST));
+            setUseSsl(XMLHandler.getTagValue(stepnode, FIELD_USESSL));
+
 
         } catch (Exception e) {
             throw new KettleXMLException("Unable to read step info from XML node", e);
@@ -152,6 +188,13 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setLimit(rep.getStepAttributeString(idStep, FIELD_LIMIT));
             setMode(rep.getStepAttributeString(idStep, FIELD_MODE));
             setUri(rep.getStepAttributeString(idStep, FIELD_URI));
+
+            setUsername(rep.getStepAttributeString(idStep, FIELD_USERNAME));
+            setPassword(rep.getStepAttributeString(idStep, FIELD_PASSWORD));
+            setHost(rep.getStepAttributeString(idStep, FIELD_HOST));
+            setPort(rep.getStepAttributeString(idStep, FIELD_PORT));
+            setVhost(rep.getStepAttributeString(idStep, FIELD_VHOST));
+            setUseSsl(rep.getStepAttributeString(idStep, FIELD_USESSL));
 
         } catch (KettleDatabaseException dbe) {
             throw new KettleException("error reading step with id_step=" + idStep + " from the repository", dbe);
@@ -172,6 +215,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             rep.saveStepAttribute(idTransformation, idStep, FIELD_MODE, getMode());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_URI, getUri());
 
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_USERNAME, getUsername());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_PASSWORD, getPassword());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_HOST, getHost());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_PORT, getPort());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_VHOST, getVhost());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_USESSL, isUseSsl());
+
+
         } catch (KettleDatabaseException dbe) {
             throw new KettleException("Unable to save step information to the repository, id_step=" + idStep, dbe);
         }
@@ -183,6 +234,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.mode           = AMQPPluginData.MODE_CONSUMER;
         this.bodyField      = DEFAULT_BODY_FIELD;
         this.uri            = DEFAULT_URI;
+
+        this.username            = DEFAULT_USERNAME;
+        this.password            = DEFAULT_PASSWORD;
+        this.host            = DEFAULT_HOST;
+        this.port            = DEFAULT_PORT;
+        this.vhost            = DEFAULT_VHOST;
+        this.usessl	= false;
+
         this.transactional  = false;
     }
 
@@ -205,6 +264,81 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         this.uri = uri;
     }
+
+
+    public String getUsername()
+    {
+        if (Const.isEmpty(username)) {
+            username = DEFAULT_USERNAME;
+        }
+
+        return username;
+    }
+
+    public void setUsername(String username)
+    {
+        this.username = username;
+    }
+
+    public String getPassword()
+    {
+        if (Const.isEmpty(password)) {
+            password = DEFAULT_PASSWORD;
+        }
+
+        return password;
+    }
+
+    public void setPassword(String password)
+    {
+        this.password = password;
+    }
+
+    public String getHost()
+    {
+        if (Const.isEmpty(host)) {
+            host = DEFAULT_HOST;
+        }
+
+        return host;
+    }
+
+    public void setHost(String host)
+    {
+        this.host = host;
+    }
+
+
+    public String getPort()
+    {
+        if (Const.isEmpty(port)) {
+            port = DEFAULT_PORT;
+        }
+
+        return port;
+    }
+
+    public void setPort(String port)
+    {
+        this.port = port;
+    }
+
+
+    public String getVhost()
+    {
+        if (Const.isEmpty(vhost)) {
+            vhost = DEFAULT_VHOST;
+        }
+
+        return vhost;
+    }
+
+    public void setVhost(String vhost)
+    {
+        this.vhost = vhost;
+    }
+
+
 
     public String getMode()
     {
@@ -230,6 +364,23 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         this.transactional = transactional;
     }
+
+
+    public boolean isUseSsl()
+    {
+        return usessl;
+    }
+
+    public void setUseSsl(String usessl)
+    {
+        this.usessl = Boolean.TRUE.toString().equals(usessl) || "Y".equals(usessl);
+    }
+
+    public void setUseSsl(boolean usessl)
+    {
+        this.usessl = usessl;
+    }
+
 
     public String getBodyField()
     {

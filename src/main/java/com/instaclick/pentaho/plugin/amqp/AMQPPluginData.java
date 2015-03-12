@@ -22,6 +22,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public long amqpTag;
     public Long limit;
     public long count = 0;
+    public boolean isUseSsl = false;
 
     public AMQPPluginData()
     {

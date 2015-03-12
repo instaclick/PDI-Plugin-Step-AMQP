@@ -206,7 +206,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
                 return;
             }
 
-        } while (response != null);
+        } while (response != null && !isStopped());
     }
 
     private void flush()
@@ -298,14 +298,20 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
-        String uri      = environmentSubstitute(meta.getUri());
+
+        String username      = environmentSubstitute(meta.getUsername());
+        String password      = environmentSubstitute(meta.getPassword());
+        String host      = environmentSubstitute(meta.getHost());
+        Integer port      = Integer.parseInt(environmentSubstitute(meta.getPort()));
+        String vhost      = environmentSubstitute(meta.getVhost());
+
 
         if (body == null) {
             throw new AMQPException("Unable to retrieve field : " + meta.getBodyField());
         }
 
-        if (uri == null) {
-            throw new AMQPException("Unable to retrieve connection uri");
+        if (username == null || password == null || host == null || port == null || vhost == null) {
+            throw new AMQPException("Unable to retrieve connection information");
         }
 
         // get field index
@@ -333,13 +339,25 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             throw new AMQPException("Unable to retrieve queue/exchange name");
         }
 
-        logMinimal(getString("AmqpPlugin.URI.Label")       + " : " + uri);
         logMinimal(getString("AmqpPlugin.Body.Label")      + " : " + body);
         logMinimal(getString("AmqpPlugin.Routing.Label")   + " : " + routing);
         logMinimal(getString("AmqpPlugin.Target.Label")    + " : " + data.target);
         logMinimal(getString("AmqpPlugin.Limit.Label")     + " : " + data.limit);
 
-        factory.setUri(uri);
+        logMinimal(getString("AmqpPlugin.Username.Label")       + " : " + username);
+        logDebug(getString("AmqpPlugin.Password.Label")       + " : " + password);
+        logMinimal(getString("AmqpPlugin.Host.Label")       + " : " + host);
+        logMinimal(getString("AmqpPlugin.Port.Label")       + " : " + port);
+        logMinimal(getString("AmqpPlugin.Vhost.Label")       + " : " + vhost);
+
+        factory.setHost(host);
+        factory.setPort(port);
+        factory.setUsername(username);
+        factory.setPassword(password);
+        factory.setVirtualHost(vhost);
+	if (meta.isUseSsl()) {
+		factory.useSslProtocol();
+	}
 
         conn    = factory.newConnection();
         channel = conn.createChannel();

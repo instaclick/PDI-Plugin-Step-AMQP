@@ -39,6 +39,37 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formURILabel;
     private FormData formURIText;
 
+    private Label labelUsername;
+    private TextVar textUsername;
+    private FormData formUsernameLabel;
+    private FormData formUsernameText;
+
+    private Label  labelPassword;
+    private TextVar textPassword;
+    private FormData formPasswordLabel;
+    private FormData formPasswordText;
+
+    private Label labelHost;
+    private TextVar textHost;
+    private FormData formHostLabel;
+    private FormData formHostText;
+
+    private Label labelPort;
+    private TextVar textPort;
+    private FormData formPortLabel;
+    private FormData formPortText;
+
+    private Label labelVhost;
+    private TextVar textVhost;
+    private FormData formVhostLabel;
+    private FormData formVhostText;
+
+    private Label labelUseSsl;
+    private Button checkUseSsl;
+    private FormData formUseSslLabel;
+    private FormData formUseSslText;
+
+
     private Label    labelMode;
     private CCombo   comboMode;
     private FormData formModeLabel;
@@ -195,13 +226,162 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         props.setLook(textURI);
         textURI.addModifyListener(modifyListener);
+        textURI.setEnabled(false);
 
         formURIText        = new FormData();
         formURIText.left   = new FormAttachment(middle, 0);
         formURIText.right  = new FormAttachment(100, 0);
         formURIText.top    = new FormAttachment(comboMode, margin);
-
+	
         textURI.setLayoutData(formURIText);
+
+        // Username line
+        labelUsername = new Label(shell, SWT.RIGHT);
+        labelUsername.setText(getString("AmqpPlugin.Username.Label"));
+        props.setLook(labelUsername);
+
+        formUsernameLabel       = new FormData();
+        formUsernameLabel.left  = new FormAttachment(0, 0);
+        formUsernameLabel.right = new FormAttachment(middle, -margin);
+        formUsernameLabel.top   = new FormAttachment(textURI , margin);
+
+        labelUsername.setLayoutData(formUsernameLabel);
+
+        textUsername = new TextVar(transMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textUsername);
+        textUsername.addModifyListener(modifyListener);
+
+        formUsernameText        = new FormData();
+        formUsernameText.left   = new FormAttachment(middle, 0);
+        formUsernameText.right  = new FormAttachment(100, 0);
+        formUsernameText.top    = new FormAttachment(textURI, margin);
+
+        textUsername.setLayoutData(formUsernameText);
+
+        // Password line
+        labelPassword = new Label(shell, SWT.RIGHT);
+        labelPassword.setText(getString("AmqpPlugin.Password.Label"));
+        props.setLook(labelPassword);
+
+        formPasswordLabel       = new FormData();
+        formPasswordLabel.left  = new FormAttachment(0, 0);
+        formPasswordLabel.right = new FormAttachment(middle, -margin);
+        formPasswordLabel.top   = new FormAttachment(textUsername , margin);
+        labelPassword.setLayoutData(formPasswordLabel);
+
+        textPassword = new TextVar(transMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+        props.setLook(textPassword);
+        textPassword.addModifyListener(modifyListener);
+
+        formPasswordText        = new FormData();
+        formPasswordText.left   = new FormAttachment(middle, 0);
+        formPasswordText.right  = new FormAttachment(100, 0);
+        formPasswordText.top    = new FormAttachment(textUsername, margin);
+
+        textPassword.setLayoutData(formPasswordText);
+        textPassword.setToolTipText(getString("AmqpPlugin.Password.Tooltip"));
+	textPassword.setEchoChar('*');
+
+
+
+        // Host line
+        labelHost = new Label(shell, SWT.RIGHT);
+        labelHost.setText(getString("AmqpPlugin.Host.Label"));
+        props.setLook(labelHost);
+
+        formHostLabel       = new FormData();
+        formHostLabel.left  = new FormAttachment(0, 0);
+        formHostLabel.right = new FormAttachment(middle, -margin);
+        formHostLabel.top   = new FormAttachment(textPassword , margin);
+
+        labelHost.setLayoutData(formHostLabel);
+
+        textHost = new TextVar(transMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textHost);
+        textHost.addModifyListener(modifyListener);
+
+        formHostText        = new FormData();
+        formHostText.left   = new FormAttachment(middle, 0);
+        formHostText.right  = new FormAttachment(100, 0);
+        formHostText.top    = new FormAttachment(textPassword, margin);
+
+        textHost.setLayoutData(formHostText);
+
+        // Port line
+        labelPort = new Label(shell, SWT.RIGHT);
+        labelPort.setText(getString("AmqpPlugin.Port.Label"));
+        props.setLook(labelPort);
+
+        formPortLabel       = new FormData();
+        formPortLabel.left  = new FormAttachment(0, 0);
+        formPortLabel.right = new FormAttachment(middle, -margin);
+        formPortLabel.top   = new FormAttachment(textHost , margin);
+
+        labelPort.setLayoutData(formPortLabel);
+
+        textPort = new TextVar(transMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textPort);
+        textPort.addModifyListener(modifyListener);
+
+        formPortText        = new FormData();
+        formPortText.left   = new FormAttachment(middle, 0);
+        formPortText.right  = new FormAttachment(100, 0);
+        formPortText.top    = new FormAttachment(textHost, margin);
+
+        textPort.setLayoutData(formPortText);
+
+        // Vhost line
+        labelVhost = new Label(shell, SWT.RIGHT);
+        labelVhost.setText(getString("AmqpPlugin.Vhost.Label"));
+        props.setLook(labelVhost);
+
+        formVhostLabel       = new FormData();
+        formVhostLabel.left  = new FormAttachment(0, 0);
+        formVhostLabel.right = new FormAttachment(middle, -margin);
+        formVhostLabel.top   = new FormAttachment(textPort , margin);
+
+        labelVhost.setLayoutData(formVhostLabel);
+
+        textVhost = new TextVar(transMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textVhost);
+        textVhost.addModifyListener(modifyListener);
+
+        formVhostText        = new FormData();
+        formVhostText.left   = new FormAttachment(middle, 0);
+        formVhostText.right  = new FormAttachment(100, 0);
+        formVhostText.top    = new FormAttachment(textPort, margin);
+
+        textVhost.setLayoutData(formVhostText);
+
+
+
+        // UseSsl
+        labelUseSsl = new Label(shell, SWT.RIGHT);
+        labelUseSsl.setText(getString("AmqpPlugin.UseSsl.Label"));
+        props.setLook(labelUseSsl);
+
+        formUseSslLabel       = new FormData();
+        formUseSslLabel.left  = new FormAttachment(0, 0);
+        formUseSslLabel.right = new FormAttachment(middle, -margin);
+        formUseSslLabel.top   = new FormAttachment(textVhost , margin);
+
+        labelUseSsl.setLayoutData(formUseSslLabel);
+
+        checkUseSsl = new Button(shell, SWT.CHECK);
+        props.setLook(checkUseSsl);
+        checkUseSsl.addSelectionListener(selectionModifyListener);
+
+        formUseSslText        = new FormData();
+        formUseSslText.left   = new FormAttachment(middle, 0);
+        formUseSslText.right  = new FormAttachment(100, 0);
+        formUseSslText.top    = new FormAttachment(textVhost, margin);
+
+        checkUseSsl.setLayoutData(formUseSslText);
+
 
         // Transactional
         labelTransactional = new Label(shell, SWT.RIGHT);
@@ -211,7 +391,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formTransactionalLabel       = new FormData();
         formTransactionalLabel.left  = new FormAttachment(0, 0);
         formTransactionalLabel.right = new FormAttachment(middle, -margin);
-        formTransactionalLabel.top   = new FormAttachment(textURI , margin);
+        formTransactionalLabel.top   = new FormAttachment(labelUseSsl , margin);
 
         labelTransactional.setLayoutData(formTransactionalLabel);
 
@@ -222,7 +402,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formTransactionalText        = new FormData();
         formTransactionalText.left   = new FormAttachment(middle, 0);
         formTransactionalText.right  = new FormAttachment(100, 0);
-        formTransactionalText.top    = new FormAttachment(textURI, margin);
+        formTransactionalText.top    = new FormAttachment(labelUseSsl, margin);
 
         checkTransactional.setLayoutData(formTransactionalText);
 
@@ -390,10 +570,15 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         wStepname.selectAll();
 
         checkTransactional.setSelection(false);
+        checkUseSsl.setSelection(false);
         textLimit.setEnabled(false);
 
         if (input.isTransactional()) {
             checkTransactional.setSelection(true);
+        }
+
+        if (input.isUseSsl()) {
+            checkUseSsl.setSelection(true);
         }
 
         int index = modes.indexOf(input.getMode());
@@ -404,6 +589,11 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         comboMode.select(index);
         textURI.setText(input.getUri());
+        textUsername.setText(input.getUsername());
+        textPassword.setText(input.getPassword());
+        textHost.setText(input.getHost());
+        textPort.setText(input.getPort());
+        textVhost.setText(input.getVhost());
         textTarget.setText(input.getTarget());
         textBodyField.setText(input.getBodyField());
 
@@ -454,6 +644,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setTarget(textTarget.getText());
         input.setBodyField(textBodyField.getText());
         input.setTransactional(checkTransactional.getSelection());
+
+        input.setUsername(textUsername.getText());
+        input.setPassword(textPassword.getText());
+        input.setHost(textHost.getText());
+        input.setPort(textPort.getText());
+        input.setVhost(textVhost.getText());
+        input.setUseSsl(checkUseSsl.getSelection());
 
         if ( ! Const.isEmpty(textRouting.getText())) {
             input.setRouting(textRouting.getText());
