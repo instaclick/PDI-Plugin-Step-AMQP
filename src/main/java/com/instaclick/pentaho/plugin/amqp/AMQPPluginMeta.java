@@ -254,9 +254,11 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     public String getUri()
     {
         if (Const.isEmpty(uri)) {
-            uri = DEFAULT_URI;
+	    if (Const.isEmpty(host)) {
+            	uri = DEFAULT_URI; 
+	    } else uri = "";
         }
-
+	
         return uri;
     }
 
@@ -297,7 +299,9 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     public String getHost()
     {
         if (Const.isEmpty(host)) {
-            host = DEFAULT_HOST;
+	    if (Const.isEmpty(uri)) {
+            	host = DEFAULT_HOST; 
+	    } else host = "";
         }
 
         return host;

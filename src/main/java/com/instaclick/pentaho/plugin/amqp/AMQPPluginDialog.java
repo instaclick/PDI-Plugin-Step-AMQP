@@ -222,11 +222,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         labelURI.setLayoutData(formURILabel);
 
-        textURI = new TextVar(transMeta, shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+        textURI = new TextVar(transMeta, shell, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
 
         props.setLook(textURI);
         textURI.addModifyListener(modifyListener);
-        textURI.setEnabled(false);
 
         formURIText        = new FormData();
         formURIText.left   = new FormAttachment(middle, 0);
@@ -624,7 +623,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     {
         stepname = wStepname.getText();
 
-        if (Const.isEmpty(textURI.getText())) {
+        if (Const.isEmpty(textURI.getText()) && Const.isEmpty(textHost.getText())) {
             textURI.setFocus();
             return;
         }

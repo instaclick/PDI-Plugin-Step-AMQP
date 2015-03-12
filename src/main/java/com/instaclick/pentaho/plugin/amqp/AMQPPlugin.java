@@ -298,6 +298,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
+        String uri  = environmentSubstitute(meta.getUri());
 
         String username      = environmentSubstitute(meta.getUsername());
         String password      = environmentSubstitute(meta.getPassword());
@@ -311,7 +312,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         }
 
         if (username == null || password == null || host == null || port == null || vhost == null) {
-            throw new AMQPException("Unable to retrieve connection information");
+            if (uri == null ) throw new AMQPException("Unable to retrieve connection information");
         }
 
         // get field index
@@ -344,19 +345,27 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         logMinimal(getString("AmqpPlugin.Target.Label")    + " : " + data.target);
         logMinimal(getString("AmqpPlugin.Limit.Label")     + " : " + data.limit);
 
-        logMinimal(getString("AmqpPlugin.Username.Label")       + " : " + username);
-        logDebug(getString("AmqpPlugin.Password.Label")       + " : " + password);
-        logMinimal(getString("AmqpPlugin.Host.Label")       + " : " + host);
-        logMinimal(getString("AmqpPlugin.Port.Label")       + " : " + port);
-        logMinimal(getString("AmqpPlugin.Vhost.Label")       + " : " + vhost);
 
-        factory.setHost(host);
-        factory.setPort(port);
-        factory.setUsername(username);
-        factory.setPassword(password);
-        factory.setVirtualHost(vhost);
-	if (meta.isUseSsl()) {
+	if (uri != null && !Const.isEmpty(uri)) {
+	   factory.setUri(uri);
+	   String uri_passwd_masked = uri.replace(factory.getPassword(),"*****");
+           logMinimal(getString("AmqpPlugin.URIMasked.Label")       + " : " + uri_passwd_masked);
+           logDebug(getString("AmqpPlugin.URI.Label")       + " : " + uri);
+	} else {
+           factory.setHost(host);
+           factory.setPort(port);
+           factory.setUsername(username);
+           factory.setPassword(password);
+           factory.setVirtualHost(vhost);
+	   if (meta.isUseSsl()) {
 		factory.useSslProtocol();
+ 	   }
+           logMinimal(getString("AmqpPlugin.UseSsl.Label")       + " : " + meta.isUseSsl());
+           logMinimal(getString("AmqpPlugin.Username.Label")       + " : " + username);
+           logDebug(getString("AmqpPlugin.Password.Label")       + " : " + password);
+           logMinimal(getString("AmqpPlugin.Host.Label")       + " : " + host);
+           logMinimal(getString("AmqpPlugin.Port.Label")       + " : " + port);
+           logMinimal(getString("AmqpPlugin.Vhost.Label")       + " : " + vhost);
 	}
 
         conn    = factory.newConnection();
