@@ -163,15 +163,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private final SelectionAdapter comboModeListener = new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e) {
-            textLimit.setEnabled(false);
-	    comboExchtype.setEnabled(true);
-	    wBinding.setEnabled(false);
 
-            if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) {
-                textLimit.setEnabled(true);
-	        comboExchtype.setEnabled(false);
-	        wBinding.setEnabled(true);
-            }
+            if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) toProducerMode();
+            if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) toConsumerMode();
         }
     };
 
@@ -187,6 +181,22 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         super(parent, (BaseStepMeta) in, transMeta, sname);
 
         input = (AMQPPluginMeta) in;
+    }
+
+    private void toProducerMode() {
+        textLimit.setVisible(false);
+        labelLimit.setVisible(false);
+	comboExchtype.setVisible(true);
+	labelExchtype.setVisible(true);
+        labelTarget.setText(getString("AmqpPlugin.Exchange.Label"));
+    }
+
+    private void toConsumerMode() {
+        textLimit.setVisible(true);
+        labelLimit.setVisible(true);
+	comboExchtype.setVisible(false);
+	labelExchtype.setVisible(false);	
+        labelTarget.setText(getString("AmqpPlugin.Queue.Label"));
     }
 
     @Override
@@ -687,10 +697,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 	wlFields.setLayoutData(fdlFields);
 	
 	final int FieldsCols=3;
-	final int FieldsRows=input.getBindingExchangeValue().length;
+	final int FieldsRows=input.getBindingTargetValue().length;
 		
 	ColumnInfo[] colinf=new ColumnInfo[FieldsCols];
-	colinf[0]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Exchange"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
+	colinf[0]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Target"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
 	colinf[1]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Exchtype"), ColumnInfo.COLUMN_TYPE_CCOMBO,exchtypes.toArray(new String[exchtypes.size()]), false); 
 	colinf[2]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.RoutingKey"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
 	colinf[0].setUsingVariables(true);
@@ -804,6 +814,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         }
         comboExchtype.select(index);
 
+        if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) toProducerMode();
+        if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) toConsumerMode();
 
 
         textURI.setText(input.getUri());
@@ -828,10 +840,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         }
 
 
-	for (int i=0;i<input.getBindingExchangeValue().length;i++)
+	for (int i=0;i<input.getBindingTargetValue().length;i++)
 	{
 		TableItem item = wBinding.table.getItem(i);
-		String exc = input.getBindingExchangeValue()[i];
+		String exc = input.getBindingTargetValue()[i];
 		String typ = input.getBindingExchtypeValue()[i];
 		String rout = input.getBindingRoutingValue()[i];
 		
@@ -901,7 +913,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
 	//Save Binding Table
 	int count = wBinding.nrNonEmpty();
-	// in Cosumer mode if we declare queu , we have to bind it to Exchange
+	// in Cosumer mode if we declare queu , we have to bind it to Target
 	if ( checkDeclare.getSelection() && count ==  0 && input.getMode() == AMQPPluginData.MODE_CONSUMER ) {
 	   wBinding.setFocus();
            return;
@@ -911,7 +923,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 	for (int i=0;i<count;i++)
 	{
 		TableItem item = wBinding.getNonEmpty(i);
-		input.getBindingExchangeValue()[i]  = Const.isEmpty(item.getText(1))?null:item.getText(1);
+		input.getBindingTargetValue()[i]  = Const.isEmpty(item.getText(1))?null:item.getText(1);
 		input.getBindingExchtypeValue()[i]  = item.getText(2);
 		input.getBindingRoutingValue()[i]  = item.getText(3);
 	}

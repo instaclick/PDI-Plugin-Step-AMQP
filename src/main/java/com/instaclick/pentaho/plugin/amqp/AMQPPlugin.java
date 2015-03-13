@@ -338,11 +338,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	data.isDeclare = meta.isDeclare();
 	data.isExclusive = meta.isExclusive();
 
-	if (data.isConsumer && data.isDeclare) {
-            data.allocateBinding(meta.getBindingExchangeValue().length);
-	    for (int i=0;i<meta.getBindingExchangeValue().length;i++)
+	if (data.isDeclare) {
+            data.allocateBinding(meta.getBindingTargetValue().length);
+	    for (int i=0;i<meta.getBindingTargetValue().length;i++)
 	    {
-		data.bindingExchangeValue[i] = environmentSubstitute(meta.getBindingExchangeValue()[i]);
+		data.bindingTargetValue[i] = environmentSubstitute(meta.getBindingTargetValue()[i]);
 		data.bindingExchtypeValue[i] = environmentSubstitute(meta.getBindingExchtypeValue()[i]);
 		data.bindingRoutingValue[i] = environmentSubstitute(meta.getBindingRoutingValue()[i]);
 	    }
@@ -414,10 +414,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	//Consumer Delcare Queue/Exchanges and Binding
 	if (data.isConsumer && data.isDeclare) {
 	    channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
-	    for (int i=0;i<data.bindingExchangeValue.length;i++)
+	    for (int i=0;i<data.bindingTargetValue.length;i++)
 	    {
-		channel.exchangeDeclare(data.bindingExchangeValue[i], data.bindingExchtypeValue[i], data.isDurable, false, null);
-		channel.queueBind(data.target,data.bindingExchangeValue[i],data.bindingRoutingValue[i]);
+		channel.exchangeDeclare(data.bindingTargetValue[i], data.bindingExchtypeValue[i], data.isDurable, false, null);
+		channel.queueBind(data.target,data.bindingTargetValue[i],data.bindingRoutingValue[i]);
 	    }
 	 	
 	}
@@ -425,6 +425,12 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	// Producer Declare
 	if (data.isProducer && data.isDeclare) {
 		channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);	
+	    for (int i=0;i<data.bindingTargetValue.length;i++)
+	    {
+	        channel.queueDeclare(data.bindingTargetValue[i], data.isDurable, false, false, null);
+		channel.queueBind(data.bindingTargetValue[i], data.target ,data.bindingRoutingValue[i]);
+	    }
+
 	}
 
 
