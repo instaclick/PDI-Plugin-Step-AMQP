@@ -50,6 +50,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_BINDING_LINE = "line";
     private static final String FIELD_BINDING_LINE_EXCHANGE = "exchange_value";
     private static final String FIELD_BINDING_LINE_ROUTING = "routing_value";
+    private static final String FIELD_BINDING_LINE_EXCHTYPE = "exchtype_value";
     private static final String FIELD_DECLARE = "declare";
     private static final String FIELD_DURABLE = "durable";
     private static final String FIELD_AUTODEL = "autodel";
@@ -92,6 +93,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
 
     private String bindingExchangeValue[];
+    private String bindingExchtypeValue[];
     private String bindingRoutingValue[];
 
     public AMQPPluginMeta() {
@@ -181,6 +183,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 	{
 		bufer.append("      <"+FIELD_BINDING_LINE+">").append(Const.CR); 
 		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_EXCHANGE, bindingExchangeValue[i])); 
+		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_EXCHTYPE, bindingExchtypeValue[i])); 
 		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_ROUTING, bindingRoutingValue[i])); 
 		bufer.append("      </"+FIELD_BINDING_LINE+">").append(Const.CR); 
 	}
@@ -223,6 +226,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 		Node lnode = XMLHandler.getSubNodeByNr(binding, FIELD_BINDING_LINE, i);
 			
 		bindingExchangeValue[i] = XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_EXCHANGE); 
+		bindingExchtypeValue[i] = XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_EXCHTYPE); 
 	        bindingRoutingValue[i] = XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_ROUTING);
             }
 
@@ -264,6 +268,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 	    for (int i=0;i<nrbindingLines;i++)
 	    {
 		bindingExchangeValue[i] = rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_EXCHANGE); //$NON-NLS-1$
+		bindingExchtypeValue[i] = rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_EXCHTYPE); //$NON-NLS-1$
 		bindingRoutingValue[i] = rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_ROUTING); //$NON-NLS-1$
 	    }
 
@@ -301,6 +306,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 	    for (int i=0;i<bindingExchangeValue.length;i++)
 	    {
 		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_EXCHANGE, bindingExchangeValue[i]); //$NON-NLS-1$
+		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_EXCHTYPE, bindingExchtypeValue[i]); //$NON-NLS-1$
 		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_ROUTING,  bindingRoutingValue[i]); //$NON-NLS-1$
 	    }
 
@@ -635,6 +641,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     public void allocateBinding(int count)
     {
 	bindingExchangeValue  = new String[count];
+	bindingExchtypeValue  = new String[count];
 	bindingRoutingValue = new String[count];
     }
 
@@ -646,6 +653,17 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     public void setBindingExchangeValue(String[] fieldName)
     {
         this.bindingExchangeValue = fieldName;
+    }
+
+
+    public String[] getBindingExchtypeValue()
+    {
+        return bindingExchtypeValue;
+    }
+    
+    public void setBindingExchtypeValue(String[] fieldName)
+    {
+        this.bindingExchtypeValue = fieldName;
     }
  
     public String[] getBindingRoutingValue()

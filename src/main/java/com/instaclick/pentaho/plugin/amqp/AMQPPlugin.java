@@ -343,6 +343,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	    for (int i=0;i<meta.getBindingExchangeValue().length;i++)
 	    {
 		data.bindingExchangeValue[i] = environmentSubstitute(meta.getBindingExchangeValue()[i]);
+		data.bindingExchtypeValue[i] = environmentSubstitute(meta.getBindingExchtypeValue()[i]);
 		data.bindingRoutingValue[i] = environmentSubstitute(meta.getBindingRoutingValue()[i]);
 	    }
 	}
@@ -415,7 +416,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	    channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
 	    for (int i=0;i<data.bindingExchangeValue.length;i++)
 	    {
-		channel.exchangeDeclare(data.bindingExchangeValue[i], data.exchtype, data.isDurable, false, null);
+		channel.exchangeDeclare(data.bindingExchangeValue[i], data.bindingExchtypeValue[i], data.isDurable, false, null);
 		channel.queueBind(data.target,data.bindingExchangeValue[i],data.bindingRoutingValue[i]);
 	    }
 	 	
