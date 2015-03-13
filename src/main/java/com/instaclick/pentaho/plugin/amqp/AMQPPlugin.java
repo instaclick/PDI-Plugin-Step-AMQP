@@ -4,6 +4,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.MessageProperties;
 import java.io.IOException;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
@@ -151,7 +152,12 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             : "";
 
         // publish the current message
-        channel.basicPublish(data.target, data.routing, null, data.body.getBytes());
+	
+        channel.basicPublish(data.target
+		 , data.routing 
+		 , data.isDurable?null:MessageProperties.PERSISTENT_TEXT_PLAIN
+		 , data.body.getBytes()
+		);
 
         // put the row to the output row stream
         putRow(data.outputRowMeta, r);
@@ -324,6 +330,24 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.isConsumer      = AMQPPluginData.MODE_CONSUMER.equals(meta.getMode());
         data.isProducer      = AMQPPluginData.MODE_PRODUCER.equals(meta.getMode());
 
+	//init Producer
+        data.exchtype = meta.getExchtype();
+
+	data.isAutodel = meta.isAutodel();
+	data.isDurable = meta.isDurable();
+	data.isDeclare = meta.isDeclare();
+	data.isExclusive = meta.isExclusive();
+
+	if (data.isConsumer && data.isDeclare) {
+            data.allocateBinding(meta.getBindingExchangeValue().length);
+	    for (int i=0;i<meta.getBindingExchangeValue().length;i++)
+	    {
+		data.bindingExchangeValue[i] = environmentSubstitute(meta.getBindingExchangeValue()[i]);
+		data.bindingRoutingValue[i] = environmentSubstitute(meta.getBindingRoutingValue()[i]);
+	    }
+	}
+	
+
         if ( ! Const.isEmpty(routing)) {
             data.routingIndex = data.outputRowMeta.indexOfValue(routing);
 
@@ -373,6 +397,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         channel.basicQos(0);
 
+
         if ( ! conn.isOpen()) {
             throw new AMQPException("Unable to open a AMQP connection");
         }
@@ -384,6 +409,25 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         if (data.isTransactional) {
             getTrans().addTransListener(transListener);
         }
+
+	//Consumer Delcare Queue/Exchanges and Binding
+	if (data.isConsumer && data.isDeclare) {
+	    channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
+	    for (int i=0;i<data.bindingExchangeValue.length;i++)
+	    {
+		channel.exchangeDeclare(data.bindingExchangeValue[i], data.exchtype, data.isDurable, false, null);
+		channel.queueBind(data.target,data.bindingExchangeValue[i],data.bindingRoutingValue[i]);
+	    }
+	 	
+	}
+
+	// Producer Declare
+	if (data.isProducer && data.isDeclare) {
+		channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);	
+	}
+
+
+
     }
 
     @Override
