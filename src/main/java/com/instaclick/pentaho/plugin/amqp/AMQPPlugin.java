@@ -383,7 +383,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface
            factory.setPort(port);
            factory.setUsername(username);
            factory.setPassword(password);
-           factory.setVirtualHost(vhost);
+	   if (vhost != null) {
+    		factory.setVirtualHost(vhost);
+	   }
 	   if (meta.isUseSsl()) {
 		factory.useSslProtocol();
  	   }
