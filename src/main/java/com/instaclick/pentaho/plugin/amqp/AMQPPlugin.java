@@ -317,9 +317,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             throw new AMQPException("Unable to retrieve field : " + meta.getBodyField());
         }
 
-        if (username == null || password == null || host == null || port == null || vhost == null) {
-            if (uri == null ) throw new AMQPException("Unable to retrieve connection information");
-        }
+
+	if ((username == null || password == null || host == null || port == null) && (uri == null) ) {
+	    throw new AMQPException("Unable to retrieve connection information");
+	}
+
 
         // get field index
         data.bodyFieldIndex  = data.outputRowMeta.indexOfValue(body);
@@ -373,8 +375,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
 	if (uri != null && !Const.isEmpty(uri)) {
 	   factory.setUri(uri);
-	   String uri_passwd_masked = uri.replace(factory.getPassword(),"*****");
-           logMinimal(getString("AmqpPlugin.URIMasked.Label")       + " : " + uri_passwd_masked);
+	   String maskedPassword = uri.replace(factory.getPassword(),"*****");
+           logMinimal(getString("AmqpPlugin.URIMasked.Label")       + " : " + maskedPassword);
            logDebug(getString("AmqpPlugin.URI.Label")       + " : " + uri);
 	} else {
            factory.setHost(host);
