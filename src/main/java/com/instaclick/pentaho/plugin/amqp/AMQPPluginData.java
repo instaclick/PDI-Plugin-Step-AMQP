@@ -35,15 +35,11 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public long count = 0;
 
 
-    public String bindingTargetValue[];
-    public String bindingExchtypeValue[];
-    public String bindingRoutingValue[];
+    public AMQPPluginMeta.Binding bindings[];
 
     public void allocateBinding(int count)
     {
-	bindingTargetValue  = new String[count];
-	bindingExchtypeValue  = new String[count];
-	bindingRoutingValue = new String[count];
+	this.bindings  = new AMQPPluginMeta.Binding[count];
     }
 
     public AMQPPluginData()

@@ -50,7 +50,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_BINDING_LINE = "line";
     private static final String FIELD_BINDING_LINE_TARGET = "target_value";
     private static final String FIELD_BINDING_LINE_ROUTING = "routing_value";
-    private static final String FIELD_BINDING_LINE_EXCHTYPE = "exchtype_value";
     private static final String FIELD_DECLARE = "declare";
     private static final String FIELD_DURABLE = "durable";
     private static final String FIELD_AUTODEL = "autodel";
@@ -92,9 +91,20 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private boolean exclusive   = false;
 
 
-    private String bindingTargetValue[];
-    private String bindingExchtypeValue[];
-    private String bindingRoutingValue[];
+    class Binding
+    {
+        private String target;
+        private String routing;
+        
+        public String getTarget() { return target; }
+        public void setTarget(String target) { this.target = target ; }
+
+        public String getRouting() { return routing; }
+        public void setRouting(String routing) { this.routing = routing ; }
+
+    }
+
+    private Binding bindings[];
 
     public AMQPPluginMeta() {
         super();
@@ -179,12 +189,11 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
 	bufer.append("    <"+FIELD_BINDING+">").append(Const.CR); 
 		
-	for (int i=0;i<bindingTargetValue.length;i++)
+	for (int i=0;i<bindings.length;i++)
 	{
 		bufer.append("      <"+FIELD_BINDING_LINE+">").append(Const.CR); 
-		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_TARGET, bindingTargetValue[i])); 
-		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_EXCHTYPE, bindingExchtypeValue[i])); 
-		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_ROUTING, bindingRoutingValue[i])); 
+		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_TARGET, bindings[i].getTarget())); 
+		bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_ROUTING, bindings[i].getRouting())); 
 		bufer.append("      </"+FIELD_BINDING_LINE+">").append(Const.CR); 
 	}
 	bufer.append("    </"+FIELD_BINDING+">").append(Const.CR); 
@@ -225,9 +234,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 	    {
 		Node lnode = XMLHandler.getSubNodeByNr(binding, FIELD_BINDING_LINE, i);
 			
-		bindingTargetValue[i] = XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_TARGET); 
-		bindingExchtypeValue[i] = XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_EXCHTYPE); 
-	        bindingRoutingValue[i] = XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_ROUTING);
+		bindings[i].setTarget( XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_TARGET) ); 
+	        bindings[i].setRouting( XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_ROUTING) );
             }
 
 
@@ -267,9 +275,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 	
 	    for (int i=0;i<nrbindingLines;i++)
 	    {
-		bindingTargetValue[i] = rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_TARGET); //$NON-NLS-1$
-		bindingExchtypeValue[i] = rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_EXCHTYPE); //$NON-NLS-1$
-		bindingRoutingValue[i] = rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_ROUTING); //$NON-NLS-1$
+		bindings[i].setTarget( rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_TARGET) );
+		bindings[i].setRouting( rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_ROUTING) ); 
 	    }
 
         } catch (KettleDatabaseException dbe) {
@@ -303,11 +310,10 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             rep.saveStepAttribute(idTransformation, idStep, FIELD_EXCLUSIVE, isExclusive());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_EXCHTYPE, getExchtype());
 
-	    for (int i=0;i<bindingTargetValue.length;i++)
+	    for (int i=0;i<bindings.length;i++)
 	    {
-		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_TARGET, bindingTargetValue[i]); //$NON-NLS-1$
-		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_EXCHTYPE, bindingExchtypeValue[i]); //$NON-NLS-1$
-		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_ROUTING,  bindingRoutingValue[i]); //$NON-NLS-1$
+		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_TARGET, bindings[i].getTarget()); 
+		rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_ROUTING,  bindings[i].getRouting());
 	    }
 
 
@@ -640,40 +646,19 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
     public void allocateBinding(int count)
     {
-	bindingTargetValue  = new String[count];
-	bindingExchtypeValue  = new String[count];
-	bindingRoutingValue = new String[count];
+	this.bindings  = new AMQPPluginMeta.Binding[count];
+	for(int i=0;i<count;i++) bindings[i] = new AMQPPluginMeta.Binding();
     }
 
-    public String[] getBindingTargetValue()
+    public void setBindings(Binding[] bindings)
     {
-        return bindingTargetValue;
-    }
-    
-    public void setBindingTargetValue(String[] fieldName)
-    {
-        this.bindingTargetValue = fieldName;
+        this.bindings = bindings;
     }
 
 
-    public String[] getBindingExchtypeValue()
+    public Binding[] getBindings()
     {
-        return bindingExchtypeValue;
-    }
-    
-    public void setBindingExchtypeValue(String[] fieldName)
-    {
-        this.bindingExchtypeValue = fieldName;
-    }
- 
-    public String[] getBindingRoutingValue()
-    {
-        return bindingRoutingValue;
-    }
-    
-    public void setBindingRoutingValue(String[] fieldValue)
-    {
-        this.bindingRoutingValue = fieldValue;
+        return this.bindings;
     }
 
 }

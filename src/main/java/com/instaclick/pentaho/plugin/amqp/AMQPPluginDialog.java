@@ -696,16 +696,14 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 	fdlFields.top  = new FormAttachment(checkExclusive, margin);
 	wlFields.setLayoutData(fdlFields);
 	
-	final int FieldsCols=3;
-	final int FieldsRows=input.getBindingTargetValue().length;
+	final int FieldsCols=2;
+	final int FieldsRows=input.getBindings().length;
 		
 	ColumnInfo[] colinf=new ColumnInfo[FieldsCols];
 	colinf[0]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Target"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
-	colinf[1]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Exchtype"), ColumnInfo.COLUMN_TYPE_CCOMBO,exchtypes.toArray(new String[exchtypes.size()]), false); 
-	colinf[2]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.RoutingKey"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
+	colinf[1]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.RoutingKey"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
 	colinf[0].setUsingVariables(true);
 	colinf[1].setUsingVariables(true);
-	colinf[2].setUsingVariables(true);
 	wBinding=new TableView(transMeta, shell, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL, 
 		  colinf, 
 		  FieldsRows,  
@@ -840,16 +838,14 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         }
 
 
-	for (int i=0;i<input.getBindingTargetValue().length;i++)
+	for (int i=0;i<input.getBindings().length;i++)
 	{
 		TableItem item = wBinding.table.getItem(i);
-		String exc = input.getBindingTargetValue()[i];
-		String typ = input.getBindingExchtypeValue()[i];
-		String rout = input.getBindingRoutingValue()[i];
+		String exc = input.getBindings()[i].getTarget();
+		String rout = input.getBindings()[i].getRouting();
 		
 		if (exc!=null) item.setText(1, exc);
-		if (typ!=null) item.setText(2, typ);
-		if (rout!=null) item.setText(3, rout);
+		if (rout!=null) item.setText(2, rout);
 	}
 
 	wBinding.setRowNums();
@@ -923,9 +919,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 	for (int i=0;i<count;i++)
 	{
 		TableItem item = wBinding.getNonEmpty(i);
-		input.getBindingTargetValue()[i]  = Const.isEmpty(item.getText(1))?null:item.getText(1);
-		input.getBindingExchtypeValue()[i]  = item.getText(2);
-		input.getBindingRoutingValue()[i]  = item.getText(3);
+		input.getBindings()[i].setTarget( Const.isEmpty(item.getText(1))?null:item.getText(1) );
+		input.getBindings()[i].setRouting( item.getText(2) );
 	}
 
         dispose();
