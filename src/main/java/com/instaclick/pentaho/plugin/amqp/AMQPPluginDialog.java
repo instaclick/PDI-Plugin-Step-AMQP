@@ -913,8 +913,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
 	//Save Binding Table
 	int count = wBinding.nrNonEmpty();
-	// in Cosumer mode if we declare queu , we have to bind it to Target
-	if ( checkDeclare.getSelection() && count ==  0 && input.getMode() == AMQPPluginData.MODE_CONSUMER ) {
+	// in Cosumer mode if we declare queue , we have to bind it to Target
+	if ( checkDeclare.getSelection() && count ==  0 && AMQPPluginData.MODE_CONSUMER.equals(input.getMode()) ) {
 	   wBinding.setFocus();
            return;
 	}
