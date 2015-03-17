@@ -3,6 +3,8 @@ package com.instaclick.pentaho.plugin.amqp;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
+import java.util.List;
+import java.util.ArrayList;
 
 public class AMQPPluginData extends BaseStepData implements StepDataInterface
 {
@@ -35,12 +37,23 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public long count = 0;
 
 
-    public AMQPPluginMeta.Binding bindings[];
+    private List<AMQPPluginMeta.Binding> bindings = new ArrayList<AMQPPluginMeta.Binding>();
 
-    public void allocateBinding(int count)
+    public void addBinding(String target, String routing)
     {
-	this.bindings  = new AMQPPluginMeta.Binding[count];
+       this.bindings.add(new AMQPPluginMeta.Binding(target, routing));
     }
+
+    public List<AMQPPluginMeta.Binding> getBindings()
+    {
+       return this.bindings;
+    }
+
+    public void clearBindings() 
+    {
+	this.bindings.clear();
+    }
+
 
     public AMQPPluginData()
     {

@@ -6,6 +6,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.MessageProperties;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowMetaInterface;
@@ -340,14 +342,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	data.isDeclare = meta.isDeclare();
 	data.isExclusive = meta.isExclusive();
 
-	if (data.isDeclare) {
-            data.allocateBinding(meta.getBindings().length);
-	    for (int i=0;i<meta.getBindings().length;i++)
-	    {
-		data.bindings[i].setTarget( environmentSubstitute(meta.getBindings()[i].getTarget()) );
-		data.bindings[i].setRouting( environmentSubstitute(meta.getBindings()[i].getRouting()) );
-	    }
+	//if (data.isDeclare) {
+        data.clearBindings();
+        for (AMQPPluginMeta.Binding item : meta.getBindings())
+        {
+        	data.addBinding(environmentSubstitute(item.getTarget()) , environmentSubstitute(item.getRouting()) );
 	}
+	//}
 	
 
         if ( ! Const.isEmpty(routing)) {
@@ -415,29 +416,31 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         }
 
 	//Consumer Delcare Queue/Exchanges and Binding
-	if (data.isConsumer && data.isDeclare) {
-	    channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
+	if (data.isConsumer ) {
+	   if (data.isDeclare) { 
+		channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
+	   }
 
 // out for declare targets definitions
 // channel.exchangeDeclare(data.bindingTargetValue[i], AMQPPluginData.EXCHTYPE_DIRECT , data.isDurable, false, null);
-
-	    for (int i=0;i<data.bindings.length;i++)
-	    {
-		channel.queueBind(data.target,data.bindings[i].getTarget(),data.bindings[i].getRouting());
-	    }
-	 	
+	   for (  AMQPPluginMeta.Binding item : data.getBindings())
+           {
+	     channel.queueBind(data.target,item.getTarget(),item.getRouting());
+	   }	
 	}
 
 	// Producer Declare
-	if (data.isProducer && data.isDeclare) {
-            channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);	
+	if (data.isProducer ) {
+          if ( data.isDeclare ) {
+	    channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);	
+	  }
 //out for declare queue
 	//  channel.queueDeclare(data.bindingTargetValue[i], data.isDurable, false, false, null);
 
-	    for (int i=0;i<data.bindings.length;i++)
-	    {
-		channel.queueBind(data.bindings[i].getTarget(), data.target ,data.bindings[i].getRouting());
-	    }
+	  for (  AMQPPluginMeta.Binding item : data.getBindings())
+	  {
+	    channel.queueBind(item.getTarget(), data.target ,item.getRouting());
+	  }
 
 	}
 

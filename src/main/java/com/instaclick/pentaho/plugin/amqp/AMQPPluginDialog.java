@@ -697,7 +697,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 	wlFields.setLayoutData(fdlFields);
 	
 	final int FieldsCols=2;
-	final int FieldsRows=input.getBindings().length;
+	final int FieldsRows=input.getBindings().size();
 		
 	ColumnInfo[] colinf=new ColumnInfo[FieldsCols];
 	colinf[0]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Target"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
@@ -837,15 +837,16 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
             textLimit.setEnabled(true);
         }
 
-
-	for (int i=0;i<input.getBindings().length;i++)
+        int i=0;
+	for (AMQPPluginMeta.Binding inp_item: input.getBindings())
 	{
-		TableItem item = wBinding.table.getItem(i);
-		String exc = input.getBindings()[i].getTarget();
-		String rout = input.getBindings()[i].getRouting();
+	   TableItem item = wBinding.table.getItem(i);
+	   String exc = inp_item.getTarget();
+	   String rout = inp_item.getRouting();
 		
-		if (exc!=null) item.setText(1, exc);
-		if (rout!=null) item.setText(2, rout);
+	   if (exc!=null) item.setText(1, exc);
+	   if (rout!=null) item.setText(2, rout);
+	   i++;
 	}
 
 	wBinding.setRowNums();
@@ -914,13 +915,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 	   wBinding.setFocus();
            return;
 	}
-	input.allocateBinding(count);
-		
+	
+	input.clearBindings();	
 	for (int i=0;i<count;i++)
 	{
 		TableItem item = wBinding.getNonEmpty(i);
-		input.getBindings()[i].setTarget( Const.isEmpty(item.getText(1))?null:item.getText(1) );
-		input.getBindings()[i].setRouting( item.getText(2) );
+		input.addBinding( Const.isEmpty(item.getText(1))?null:item.getText(1) ,  item.getText(2));
 	}
 
         dispose();
