@@ -43,9 +43,9 @@ PDI Step Configuration
 | Durable               | Durability for message                                                        |
 | Autodelete            | Autodelete Exchange or Queue after produce,consume                            |
 | Exclusive             | for queue , exclsuive usage                                                   |
-| Binding               | Exchange, Type, Routing, specified                                            |
+| Binding               | Target, Routing, specified                                                    |
 
 
 Limitations
 -----------
-
+* no declaration for Target objects.
