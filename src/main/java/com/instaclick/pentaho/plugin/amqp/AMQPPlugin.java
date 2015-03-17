@@ -1,13 +1,11 @@
 package com.instaclick.pentaho.plugin.amqp;
 
+import com.instaclick.pentaho.plugin.amqp.AMQPPluginMeta.Binding;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
-import com.rabbitmq.client.MessageProperties;
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowMetaInterface;
@@ -33,19 +31,22 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     private Connection conn = null;
     private Channel channel = null;
 
-    private final TransListener transListener = new TransListener() {
-	    @Override
-	    public void transStarted( Trans trans ) throws KettleException {
-	    }
+    private final TransListener transListener = new TransListener()
+    {
+        @Override
+        public void transStarted(Trans trans) throws KettleException
+        {
+        }
 
-	    @Override
-	    public void transActive( Trans trans ) {
-	    }
+        @Override
+        public void transActive(Trans trans)
+        {
+        }
 
         @Override
         public void transFinished(Trans trans) throws KettleException
         {
-            if ( ! data.isTransactional) {
+            if (!data.isTransactional) {
                 return;
             }
 
@@ -68,9 +69,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     @Override
     public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException, KettleStepException
     {
-        meta        = (AMQPPluginMeta) smi;
-        data        = (AMQPPluginData) sdi;
-        Object[] r  = getRow();
+        meta = (AMQPPluginMeta) smi;
+        data = (AMQPPluginData) sdi;
+        Object[] r = getRow();
 
         if (first) {
             first = false;
@@ -81,7 +82,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             }
 
             try {
-                initFilter();
+                initPluginStep();
             } catch (Exception e) {
                 throw new AMQPException(e.getMessage(), e);
             }
@@ -118,7 +119,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
     private void produce(Object[] r) throws IOException, KettleStepException
     {
-        if (data.isTransactional && ! data.isTxOpen) {
+        if (data.isTransactional && !data.isTxOpen) {
             channel.txSelect();
 
             data.isTxOpen = true;
@@ -150,16 +151,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         data.body    = String.valueOf(r[data.bodyFieldIndex]);
         data.routing = (data.routingIndex != null)
-            ? String.valueOf(r[data.routingIndex])
-            : "";
+                ? String.valueOf(r[data.routingIndex])
+                : "";
 
         // publish the current message
-	
-        channel.basicPublish(data.target
-		 , data.routing 
-		 , data.isDurable?null:MessageProperties.PERSISTENT_TEXT_PLAIN
-		 , data.body.getBytes()
-		);
+        channel.basicPublish(data.target, data.routing, null, data.body.getBytes());
 
         // put the row to the output row stream
         putRow(data.outputRowMeta, r);
@@ -291,9 +287,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     }
 
     /**
-     * Initialize filter
+     * Initialize
      */
-    private void initFilter() throws Exception
+    private void initPluginStep() throws Exception
     {
         RowMetaInterface rowMeta = (getInputRowMeta() != null)
             ? (RowMetaInterface) getInputRowMeta().clone()
@@ -306,50 +302,41 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
-        String uri  = environmentSubstitute(meta.getUri());
+        String uri      = environmentSubstitute(meta.getUri());
+        String username = environmentSubstitute(meta.getUsername());
+        String password = environmentSubstitute(meta.getPassword());
+        String host     = environmentSubstitute(meta.getHost());
+        String vhost    = environmentSubstitute(meta.getVhost());
+        Integer port    = null;
 
-        String username      = environmentSubstitute(meta.getUsername());
-        String password      = environmentSubstitute(meta.getPassword());
-        String host      = environmentSubstitute(meta.getHost());
-        Integer port      = Integer.parseInt(environmentSubstitute(meta.getPort()));
-        String vhost      = environmentSubstitute(meta.getVhost());
-
+        if ( ! Const.isEmpty(meta.getPort())) {
+            port = Integer.parseInt(environmentSubstitute(meta.getPort()));
+        }
 
         if (body == null) {
             throw new AMQPException("Unable to retrieve field : " + meta.getBodyField());
         }
 
-
-	if ((username == null || password == null || host == null || port == null) && (uri == null) ) {
-	    throw new AMQPException("Unable to retrieve connection information");
-	}
-
+        if ((username == null || password == null || host == null || port == null) && (uri == null)) {
+            throw new AMQPException("Unable to retrieve connection information");
+        }
 
         // get field index
-        data.bodyFieldIndex  = data.outputRowMeta.indexOfValue(body);
-        data.target          = environmentSubstitute(meta.getTarget());
-        data.limit           = meta.getLimit();
+        data.bodyFieldIndex = data.outputRowMeta.indexOfValue(body);
+        data.target         = environmentSubstitute(meta.getTarget());
+        data.bindings       = meta.getBindings();
+        data.limit          = meta.getLimit();
 
         data.isTransactional = meta.isTransactional();
         data.isConsumer      = AMQPPluginData.MODE_CONSUMER.equals(meta.getMode());
         data.isProducer      = AMQPPluginData.MODE_PRODUCER.equals(meta.getMode());
 
-	//init Producer
-        data.exchtype = meta.getExchtype();
-
-	data.isAutodel = meta.isAutodel();
-	data.isDurable = meta.isDurable();
-	data.isDeclare = meta.isDeclare();
-	data.isExclusive = meta.isExclusive();
-
-	//if (data.isDeclare) {
-        data.clearBindings();
-        for (AMQPPluginMeta.Binding item : meta.getBindings())
-        {
-        	data.addBinding(environmentSubstitute(item.getTarget()) , environmentSubstitute(item.getRouting()) );
-	}
-	//}
-	
+        //init Producer
+        data.exchtype    = meta.getExchtype();
+        data.isAutodel   = meta.isAutodel();
+        data.isDurable   = meta.isDurable();
+        data.isDeclare   = meta.isDeclare();
+        data.isExclusive = meta.isExclusive();
 
         if ( ! Const.isEmpty(routing)) {
             data.routingIndex = data.outputRowMeta.indexOfValue(routing);
@@ -367,41 +354,41 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             throw new AMQPException("Unable to retrieve queue/exchange name");
         }
 
-        logMinimal(getString("AmqpPlugin.Body.Label")      + " : " + body);
-        logMinimal(getString("AmqpPlugin.Routing.Label")   + " : " + routing);
-        logMinimal(getString("AmqpPlugin.Target.Label")    + " : " + data.target);
-        logMinimal(getString("AmqpPlugin.Limit.Label")     + " : " + data.limit);
+        logMinimal(getString("AmqpPlugin.Body.Label")     + " : " + body);
+        logMinimal(getString("AmqpPlugin.Routing.Label")  + " : " + routing);
+        logMinimal(getString("AmqpPlugin.Target.Label")   + " : " + data.target);
+        logMinimal(getString("AmqpPlugin.Limit.Label")    + " : " + data.limit);
+        logMinimal(getString("AmqpPlugin.UseSsl.Label")   + " : " + meta.isUseSsl());
 
+        if ( ! Const.isEmpty(uri)) {
+            logMinimal(getString("AmqpPlugin.URI.Label")      + " : " + uri);
 
-	if (uri != null && !Const.isEmpty(uri)) {
-	   factory.setUri(uri);
-	   String maskedPassword = uri.replace(factory.getPassword(),"*****");
-           logMinimal(getString("AmqpPlugin.URIMasked.Label")       + " : " + maskedPassword);
-           logDebug(getString("AmqpPlugin.URI.Label")       + " : " + uri);
-	} else {
-           factory.setHost(host);
-           factory.setPort(port);
-           factory.setUsername(username);
-           factory.setPassword(password);
-	   if (vhost != null) {
-    		factory.setVirtualHost(vhost);
-	   }
-	   if (meta.isUseSsl()) {
-		factory.useSslProtocol();
- 	   }
-           logMinimal(getString("AmqpPlugin.UseSsl.Label")       + " : " + meta.isUseSsl());
-           logMinimal(getString("AmqpPlugin.Username.Label")       + " : " + username);
-           logDebug(getString("AmqpPlugin.Password.Label")       + " : " + password);
-           logMinimal(getString("AmqpPlugin.Host.Label")       + " : " + host);
-           logMinimal(getString("AmqpPlugin.Port.Label")       + " : " + port);
-           logMinimal(getString("AmqpPlugin.Vhost.Label")       + " : " + vhost);
-	}
+            factory.setUri(uri);
+        } else {
+            logMinimal(getString("AmqpPlugin.Username.Label") + " : " + username);
+            logMinimal(getString("AmqpPlugin.Password.Label") + " : " + password);
+            logMinimal(getString("AmqpPlugin.Host.Label")     + " : " + host);
+            logMinimal(getString("AmqpPlugin.Port.Label")     + " : " + port);
+            logMinimal(getString("AmqpPlugin.Vhost.Label")    + " : " + vhost);
+
+            factory.setHost(host);
+            factory.setPort(port);
+            factory.setUsername(username);
+            factory.setPassword(password);
+
+            if (vhost != null) {
+                factory.setVirtualHost(vhost);
+            }
+
+            if (meta.isUseSsl()) {
+                factory.useSslProtocol();
+            }
+        }
 
         conn    = factory.newConnection();
         channel = conn.createChannel();
 
         channel.basicQos(0);
-
 
         if ( ! conn.isOpen()) {
             throw new AMQPException("Unable to open a AMQP connection");
@@ -415,37 +402,35 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             getTrans().addTransListener(transListener);
         }
 
-	//Consumer Delcare Queue/Exchanges and Binding
-	if (data.isConsumer ) {
-	   if (data.isDeclare) { 
-		channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
-	   }
+        //Consumer Delcare Queue/Exchanges and Binding
+        if (data.isConsumer && data.isDeclare) {
+            logMinimal(String.format("Declaring Queue '%s' {type:%s, durable:%s, auto_delete:%s}", data.target, data.exchtype, data.isDurable, data.isAutodel));
+            channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
 
-// out for declare targets definitions
-// channel.exchangeDeclare(data.bindingTargetValue[i], AMQPPluginData.EXCHTYPE_DIRECT , data.isDurable, false, null);
-	   for (  AMQPPluginMeta.Binding item : data.getBindings())
-           {
-	     channel.queueBind(data.target,item.getTarget(),item.getRouting());
-	   }	
-	}
+            for (Binding item : data.bindings) {
+                String queueName    = data.target;
+                String exchangeName = environmentSubstitute(item.getTarget());
+                String routingKey   = environmentSubstitute(item.getRouting());
 
-	// Producer Declare
-	if (data.isProducer ) {
-          if ( data.isDeclare ) {
-	    channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);	
-	  }
-//out for declare queue
-	//  channel.queueDeclare(data.bindingTargetValue[i], data.isDurable, false, false, null);
+                logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", queueName, exchangeName, routingKey));
+                channel.queueBind(queueName, exchangeName, routingKey);
+            }
+        }
 
-	  for (  AMQPPluginMeta.Binding item : data.getBindings())
-	  {
-	    channel.queueBind(item.getTarget(), data.target ,item.getRouting());
-	  }
+        // Producer Declare
+        if (data.isProducer && data.isDeclare) {
+            logMinimal(String.format("Declaring Exchange '%s' {type:%s, durable:%s, auto_delete:%s}", data.target, data.exchtype, data.isDurable, data.isAutodel));
+            channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);
 
-	}
+            for (Binding item : data.bindings) {
+                String exchangeName = data.target;
+                String queueName    = environmentSubstitute(item.getTarget());
+                String routingKey   = environmentSubstitute(item.getRouting());
 
-
-
+                logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", queueName, exchangeName, routingKey));
+                channel.queueBind(queueName, exchangeName, routingKey);
+            }
+        }
     }
 
     @Override

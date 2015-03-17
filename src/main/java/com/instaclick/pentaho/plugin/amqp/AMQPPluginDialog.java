@@ -1,5 +1,6 @@
 package com.instaclick.pentaho.plugin.amqp;
 
+import com.instaclick.pentaho.plugin.amqp.AMQPPluginMeta.Binding;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +25,6 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.TableItem;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
 import org.pentaho.di.ui.core.widget.TableView;
-import org.pentaho.di.i18n.BaseMessages;
 
 import org.pentaho.di.core.Const;
 import org.pentaho.di.trans.TransMeta;
@@ -128,10 +128,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formTransactionalLabel;
     private FormData formTransactionalText;
 
-
-    private Label        wlFields;
-    private TableView    wBinding;
-    private FormData     fdlFields, fdFields;
+    private Label        labelBinding;
+    private TableView    tableBinding;
+    private FormData     formBindingLabel;
+    private FormData     formBindingText;
 
     private static final List<String> modes = new ArrayList<String>(Arrays.asList(new String[] {
         AMQPPluginData.MODE_CONSUMER,
@@ -144,7 +144,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         AMQPPluginData.EXCHTYPE_HEADERS,
         AMQPPluginData.EXCHTYPE_TOPIC
     }));
-
 
     private final ModifyListener modifyListener = new ModifyListener() {
         @Override
@@ -164,8 +163,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         @Override
         public void widgetSelected(SelectionEvent e) {
 
-            if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) toProducerMode();
-            if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) toConsumerMode();
+            if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) {
+                enableProducerFields();
+            }
+
+            if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) {
+                enableConsumerFields();
+            }
         }
     };
 
@@ -175,7 +179,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         }
     };
 
-
     public AMQPPluginDialog(Shell parent, Object in, TransMeta transMeta, String sname)
     {
         super(parent, (BaseStepMeta) in, transMeta, sname);
@@ -183,19 +186,21 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input = (AMQPPluginMeta) in;
     }
 
-    private void toProducerMode() {
+    private void enableProducerFields()
+    {
         textLimit.setVisible(false);
         labelLimit.setVisible(false);
-	comboExchtype.setVisible(true);
-	labelExchtype.setVisible(true);
+        comboExchtype.setVisible(true);
+        labelExchtype.setVisible(true);
         labelTarget.setText(getString("AmqpPlugin.Exchange.Label"));
     }
 
-    private void toConsumerMode() {
+    private void enableConsumerFields()
+    {
         textLimit.setVisible(true);
         labelLimit.setVisible(true);
-	comboExchtype.setVisible(false);
-	labelExchtype.setVisible(false);	
+        comboExchtype.setVisible(false);
+        labelExchtype.setVisible(false);
         labelTarget.setText(getString("AmqpPlugin.Queue.Label"));
     }
 
@@ -293,7 +298,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formURIText.left   = new FormAttachment(middle, 0);
         formURIText.right  = new FormAttachment(100, 0);
         formURIText.top    = new FormAttachment(comboMode, margin);
-	
+
         textURI.setLayoutData(formURIText);
 
         // Username line
@@ -342,9 +347,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textPassword.setLayoutData(formPasswordText);
         textPassword.setToolTipText(getString("AmqpPlugin.Password.Tooltip"));
-	textPassword.setEchoChar('*');
-
-
 
         // Host line
         labelHost = new Label(shell, SWT.RIGHT);
@@ -418,8 +420,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textVhost.setLayoutData(formVhostText);
 
-
-
         // UseSsl
         labelUseSsl = new Label(shell, SWT.RIGHT);
         labelUseSsl.setText(getString("AmqpPlugin.UseSsl.Label"));
@@ -442,7 +442,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formUseSslText.top    = new FormAttachment(textVhost, margin);
 
         checkUseSsl.setLayoutData(formUseSslText);
-
 
         // Transactional
         labelTransactional = new Label(shell, SWT.RIGHT);
@@ -684,40 +683,39 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         checkExclusive.setLayoutData(formExclusiveText);
 
+        // Consumer Bindings
+        labelBinding = new Label(shell, SWT.NONE);
 
+        labelBinding.setText(getString("AmqpPlugin.Binding.Label")); //$NON-NLS-1$
+        props.setLook(labelBinding);
 
+        formBindingLabel      = new FormData();
+        formBindingLabel.left = new FormAttachment(0, 0);
+        formBindingLabel.top  = new FormAttachment(checkExclusive, margin);
+        labelBinding.setLayoutData(formBindingLabel);
 
-	// Consumer Bindings
-	wlFields=new Label(shell, SWT.NONE);
-	wlFields.setText(getString("AmqpPlugin.Binding.Label")); //$NON-NLS-1$
- 	props.setLook(wlFields);
-	fdlFields=new FormData();
-	fdlFields.left = new FormAttachment(0, 0);
-	fdlFields.top  = new FormAttachment(checkExclusive, margin);
-	wlFields.setLayoutData(fdlFields);
-	
-	final int FieldsCols=2;
-	final int FieldsRows=input.getBindings().size();
-		
-	ColumnInfo[] colinf=new ColumnInfo[FieldsCols];
-	colinf[0]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.Target"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
-	colinf[1]=new ColumnInfo(getString("AmqpPlugin.Binding.Column.RoutingKey"), ColumnInfo.COLUMN_TYPE_TEXT, false); 
-	colinf[0].setUsingVariables(true);
-	colinf[1].setUsingVariables(true);
-	wBinding=new TableView(transMeta, shell, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL, 
-		  colinf, 
-		  FieldsRows,  
-		  modifyListener,
-		  props
-	  );
-	fdFields=new FormData();
-	fdFields.left  = new FormAttachment(0, 0);
-	fdFields.top   = new FormAttachment(wlFields, margin);
-	fdFields.right = new FormAttachment(100, 0);
-	fdFields.bottom= new FormAttachment(100, -50);
-	wBinding.setLayoutData(fdFields);
+        ColumnInfo[] colinf  = new ColumnInfo[]{
+            new ColumnInfo(getString("AmqpPlugin.Binding.Column.Target"), ColumnInfo.COLUMN_TYPE_TEXT, false),
+            new ColumnInfo(getString("AmqpPlugin.Binding.Column.RoutingKey"), ColumnInfo.COLUMN_TYPE_TEXT, false)
+        };
 
+        //colinf[0].setUsingVariables(true);
+        //colinf[1].setUsingVariables(true);
 
+        tableBinding = new TableView(transMeta, shell, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL,
+            colinf,
+            input.getBindings().size(),
+            modifyListener,
+            props
+        );
+
+        formBindingText        = new FormData();
+        formBindingText.left   = new FormAttachment(0, 0);
+        formBindingText.top    = new FormAttachment(labelBinding, margin);
+        formBindingText.right  = new FormAttachment(100, 0);
+        formBindingText.bottom = new FormAttachment(100, -50);
+
+        tableBinding.setLayoutData(formBindingText);
 
         // Some buttons
         wOK     = new Button(shell, SWT.PUSH);
@@ -743,15 +741,15 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
             }
         };
 
-        wCancel.addListener(SWT.Selection, lsCancel);
-        wOK.addListener(SWT.Selection, lsOK);
-
         lsDef = new SelectionAdapter() {
             @Override
             public void widgetDefaultSelected(SelectionEvent e) {
                 ok();
             }
         };
+
+        wCancel.addListener(SWT.Selection, lsCancel);
+        wOK.addListener(SWT.Selection, lsOK);
 
         textBodyField.addSelectionListener(lsDef);
         wStepname.addSelectionListener(lsDef);
@@ -767,8 +765,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         // Set the shell size, based upon previous time...
         setSize();
-
         getData();
+
         input.setChanged(changed);
 
         shell.open();
@@ -786,72 +784,61 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     {
         wStepname.selectAll();
 
-        checkTransactional.setSelection(false);
-
-        textLimit.setEnabled(false);
-
-        if (input.isTransactional()) {
-            checkTransactional.setSelection(true);
-        }
-
         checkUseSsl.setSelection(input.isUseSsl());
         checkDeclare.setSelection(input.isDeclare());
         checkDurable.setSelection(input.isDurable());
+        checkTransactional.setSelection(input.isTransactional());
 
-        int index = modes.indexOf(input.getMode());
+        int indexMode     = modes.indexOf(input.getMode());
+        int indexExchtype = exchtypes.indexOf(input.getExchtype());
 
-        if (index == -1) {
-            index = 0;
-        }
-        comboMode.select(index);
-
-        index = exchtypes.indexOf(input.getExchtype());
-
-        if (index == -1) {
-            index = 0;
-        }
-        comboExchtype.select(index);
-
-        if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) toProducerMode();
-        if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) toConsumerMode();
-
-
-        textURI.setText(input.getUri());
-        textUsername.setText(input.getUsername());
-        textPassword.setText(input.getPassword());
-        textHost.setText(input.getHost());
-        textPort.setText(input.getPort());
-        textVhost.setText(input.getVhost());
-        textTarget.setText(input.getTarget());
-        textBodyField.setText(input.getBodyField());
-
-        if (input.getRouting() != null) {
-            textRouting.setText(input.getRouting());
+        if (indexMode == -1) {
+            indexMode = 0;
         }
 
-        if (input.getLimit() != null) {
-            textLimit.setText(input.getLimitString());
+        if (indexExchtype == -1) {
+            indexExchtype = 0;
+        }
+
+        comboMode.select(indexMode);
+        comboExchtype.select(indexExchtype);
+
+        if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) {
+            enableProducerFields();
         }
 
         if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) {
-            textLimit.setEnabled(true);
+            enableConsumerFields();
         }
 
-        int i=0;
-	for (AMQPPluginMeta.Binding inp_item: input.getBindings())
-	{
-	   TableItem item = wBinding.table.getItem(i);
-	   String exc = inp_item.getTarget();
-	   String rout = inp_item.getRouting();
-		
-	   if (exc!=null) item.setText(1, exc);
-	   if (rout!=null) item.setText(2, rout);
-	   i++;
-	}
+        setFieldText(textURI, input.getUri());
+        setFieldText(textHost, input.getHost());
+        setFieldText(textPort, input.getPort());
+        setFieldText(textVhost, input.getVhost());
+        setFieldText(textTarget, input.getTarget());
+        setFieldText(textRouting, input.getRouting());
+        setFieldText(textLimit, input.getLimitString());
+        setFieldText(textUsername, input.getUsername());
+        setFieldText(textPassword, input.getPassword());
+        setFieldText(textBodyField, input.getBodyField());
 
-	wBinding.setRowNums();
-	wBinding.optWidth(true);
+        for (int i = 0; i < input.getBindings().size(); i++) {
+            final Binding binding = input.getBindings().get(i);
+            final TableItem item  = tableBinding.table.getItem(i);
+            final String target   = binding.getTarget();
+            final String routing  = binding.getRouting();
 
+            if ( ! Const.isEmpty(target)) {
+                item.setText(1, target);
+            }
+
+            if ( ! Const.isEmpty(routing)) {
+                item.setText(2, routing);
+            }
+        }
+
+        tableBinding.setRowNums();
+        tableBinding.optWidth(true);
 
         wStepname.selectAll();
     }
@@ -868,61 +855,117 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     {
         stepname = wStepname.getText();
 
-        if (Const.isEmpty(textURI.getText()) && Const.isEmpty(textHost.getText())) {
+        input.setUri(getFieldText(textURI));
+        input.setTarget(getFieldText(textTarget));
+        input.setBodyField(getFieldText(textBodyField));
+        input.setUsername(getFieldText(textUsername));
+        input.setPassword(getFieldText(textPassword));
+        input.setHost(getFieldText(textHost));
+        input.setPort(getFieldText(textPort));
+        input.setVhost(getFieldText(textVhost));
+        input.setRouting(getFieldText(textRouting));
+        input.setLimit(getFieldText(textLimit));
+
+        input.setUseSsl(checkUseSsl.getSelection());
+        input.setDurable(checkDurable.getSelection());
+        input.setDeclare(checkDeclare.getSelection());
+        input.setTransactional(checkTransactional.getSelection());
+
+        input.setMode(getFieldText(comboMode));
+        input.setExchtype(getFieldText(comboExchtype));
+        input.clearBindings();
+
+        if (Const.isEmpty(input.getUri()) && Const.isEmpty(input.getHost())) {
             textURI.setFocus();
+            textHost.setFocus();
             return;
         }
 
-        if (Const.isEmpty(textTarget.getText())) {
+        if (Const.isEmpty(input.getTarget())) {
             textTarget.setFocus();
             return;
         }
 
-        if (Const.isEmpty(textBodyField.getText())) {
+        if (Const.isEmpty(input.getBodyField())) {
             textBodyField.setFocus();
             return;
         }
 
-        input.setUri(textURI.getText());
-        input.setMode(comboMode.getText());
-        input.setExchtype(comboExchtype.getText());
-        input.setTarget(textTarget.getText());
-        input.setBodyField(textBodyField.getText());
-        input.setTransactional(checkTransactional.getSelection());
+        //Save Binding Table
+        int count = tableBinding.nrNonEmpty();
 
-        input.setUsername(textUsername.getText());
-        input.setPassword(textPassword.getText());
-        input.setHost(textHost.getText());
-        input.setPort(textPort.getText());
-        input.setVhost(textVhost.getText());
-        input.setUseSsl(checkUseSsl.getSelection());
-        input.setDurable(checkDurable.getSelection());
-        input.setDeclare(checkDeclare.getSelection());
-
-        if ( ! Const.isEmpty(textRouting.getText())) {
-            input.setRouting(textRouting.getText());
+        // nothing to save
+        if (count <= 0) {
+            dispose();
+            return;
         }
 
-        if ( ! Const.isEmpty(textLimit.getText())) {
-            input.setLimit(textLimit.getText());
+        for (int i = 0; i< count; i++) {
+            TableItem item = tableBinding.getNonEmpty(i);
+
+            if (item == null) {
+                continue;
+            }
+
+            String target  = item.getText(1);
+            String routing = item.getText(2);
+
+            if (Const.isEmpty(target)) {
+                continue;
+            }
+
+            input.addBinding(target, routing);
         }
-
-
-	//Save Binding Table
-	int count = wBinding.nrNonEmpty();
-	// in Cosumer mode if we declare queue , we have to bind it to Target
-	if ( checkDeclare.getSelection() && count ==  0 && AMQPPluginData.MODE_CONSUMER.equals(input.getMode()) ) {
-	   wBinding.setFocus();
-           return;
-	}
-	
-	input.clearBindings();	
-	for (int i=0;i<count;i++)
-	{
-		TableItem item = wBinding.getNonEmpty(i);
-		input.addBinding( Const.isEmpty(item.getText(1))?null:item.getText(1) ,  item.getText(2));
-	}
 
         dispose();
+    }
+
+    private void setFieldText(TextVar field, String value)
+    {
+        if (value == null) {
+            field.setText("");
+
+            return;
+        }
+
+        field.setText(value);
+    }
+
+    private void setFieldText(Text field, String value)
+    {
+        if (value == null) {
+            field.setText("");
+
+            return;
+        }
+
+        field.setText(value);
+    }
+
+    private String getFieldText(TextVar field)
+    {
+        if (Const.isEmpty(field.getText())) {
+            return null;
+        }
+
+        return field.getText();
+    }
+
+    private String getFieldText(Text field)
+    {
+        if (Const.isEmpty(field.getText())) {
+            return null;
+        }
+
+        return field.getText();
+    }
+
+    private String getFieldText(CCombo field)
+    {
+        if (Const.isEmpty(field.getText())) {
+            return null;
+        }
+
+        return field.getText();
     }
 }

@@ -48,4 +48,4 @@ PDI Step Configuration
 
 Limitations
 -----------
-* no declaration for Target objects.
+* No declaration for target, These must be "declared" before they can be used.

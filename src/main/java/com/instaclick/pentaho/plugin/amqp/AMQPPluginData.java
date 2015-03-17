@@ -16,7 +16,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public static final String EXCHTYPE_HEADERS = "headers";
     public static final String EXCHTYPE_TOPIC = "topic";
 
-
+    public List<AMQPPluginMeta.Binding> bindings;
     public RowMetaInterface outputRowMeta;
     public Integer bodyFieldIndex = null;
     public Integer routingIndex = null;
@@ -35,25 +35,6 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public long amqpTag;
     public Long limit;
     public long count = 0;
-
-
-    private List<AMQPPluginMeta.Binding> bindings = new ArrayList<AMQPPluginMeta.Binding>();
-
-    public void addBinding(String target, String routing)
-    {
-       this.bindings.add(new AMQPPluginMeta.Binding(target, routing));
-    }
-
-    public List<AMQPPluginMeta.Binding> getBindings()
-    {
-       return this.bindings;
-    }
-
-    public void clearBindings() 
-    {
-	this.bindings.clear();
-    }
-
 
     public AMQPPluginData()
     {
