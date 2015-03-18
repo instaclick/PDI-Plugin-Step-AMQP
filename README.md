@@ -44,7 +44,7 @@ PDI Step Configuration
 | Autodelete            | Autodelete Exchange or Queue after produce,consume                            |
 | Exclusive             | for queue , exclsuive usage                                                   |
 | Binding               | Target, Routing, Target type ( queue or exchange in PRODUCER mode ) specified |
-| Wait for Messages     | Consumer watinign for messages mode                                           |
+| Wait for Messages     | Consumer waiting for messages mode                                            |
 
 
 Limitations

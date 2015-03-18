@@ -1,5 +1,7 @@
 2.1.1
 * added to Binding table target type, to allow bind exchange to exchange
+* fixed store : Autodelete, Exclsuive
+* added WaitForData Consumer mode
 
 2.1.0
 * added declare for queue/exchange
