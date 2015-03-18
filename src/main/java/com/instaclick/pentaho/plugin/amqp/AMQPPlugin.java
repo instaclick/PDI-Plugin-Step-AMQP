@@ -5,6 +5,8 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.GetResponse;
+import com.rabbitmq.client.QueueingConsumer;
+import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
@@ -97,6 +99,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
                 return false;
             } catch (IOException e) {
                 throw new AMQPException(e.getMessage(), e);
+            } catch (InterruptedException e) {
+                throw new AMQPException(e.getMessage(), e);
             }
         }
 
@@ -166,23 +170,56 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         }
     }
 
-    private void consume() throws IOException, KettleStepException
+    private void consume() throws IOException, KettleStepException, InterruptedException
     {
-        GetResponse response;
-
+        GetResponse response 		= null;
+	QueueingConsumer consumer 	= null;
+        if (data.isWaitingConsumer) { 
+		logMinimal("WAITING FOR MESSAGES");
+		consumer = new QueueingConsumer(channel) {
+		   @Override
+		  public void handleCancel(String consumerTag) throws IOException {
+			logMinimal(consumerTag + "Canceled");
+		  }
+		  public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
+			logMinimal(consumerTag + " :SHUTDOWN: " + sig.getMessage() );
+		  }
+		};
+		channel.basicConsume(data.target, false, consumer);
+	}
         do {
-            response = channel.basicGet(data.target, false);
+	    if (data.isWaitingConsumer) {
+		    QueueingConsumer.Delivery delivery = null;
+		    do {  delivery = consumer.nextDelivery(10000); } while (!isStopped() && delivery == null);
+	            
+		    if (delivery == null ) {
+		        return;
+		    }
 
-            if (response == null) {
-                return;
-            }
+	            final byte[] body = delivery.getBody();
+	            final long tag    = delivery.getEnvelope().getDeliveryTag();
 
-            final byte[] body = response.getBody();
-            final long tag    = response.getEnvelope().getDeliveryTag();
+	            data.body    = new String(body);
+	            data.routing = delivery.getEnvelope().getRoutingKey();
+	            data.count ++;		    
+	            data.amqpTag = tag;
 
-            data.body    = new String(body);
-            data.routing = response.getEnvelope().getRoutingKey();
-            data.count ++;
+	    } else {
+	            response = channel.basicGet(data.target, false);
+
+        	    if (response == null) {
+	                return;
+	            }
+
+	            final byte[] body = response.getBody();
+	            final long tag    = response.getEnvelope().getDeliveryTag();
+
+	            data.body    = new String(body);
+	            data.routing = response.getEnvelope().getRoutingKey();
+	            data.count ++;
+	            data.amqpTag = tag;
+
+	    }
 
             // safely add the unique field at the end of the output row
             Object[] r = RowDataUtil.allocateRowData(data.outputRowMeta.size());
@@ -199,18 +236,17 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             }
 
             if ( ! data.isTransactional) {
-                logDebug("basicAck : " + tag);
-                channel.basicAck(tag, true);
+                logDebug("basicAck : " + data.amqpTag);
+                channel.basicAck(data.amqpTag, true);
             }
 
-            data.amqpTag = tag;
 
             if (data.count >= data.limit) {
                 logBasic(String.format("Message limit %s", data.count));
                 return;
             }
 
-        } while (response != null && !isStopped());
+        } while ( !isStopped());
     }
 
     private void flush()
@@ -328,6 +364,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.limit          = meta.getLimit();
 
         data.isTransactional = meta.isTransactional();
+        data.isWaitingConsumer = meta.isWaitingConsumer();
         data.isConsumer      = AMQPPluginData.MODE_CONSUMER.equals(meta.getMode());
         data.isProducer      = AMQPPluginData.MODE_PRODUCER.equals(meta.getMode());
 
@@ -404,11 +441,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         //Consumer Delcare Queue/Exchanges and Binding
         if (data.isConsumer && data.isDeclare) {
-            logMinimal(String.format("Declaring Queue '%s' {type:%s, durable:%s, auto_delete:%s}", data.target, data.exchtype, data.isDurable, data.isAutodel));
+            logMinimal(String.format("Declaring Queue '%s' { durable:%s, exclusive:%s, auto_delete:%s}", data.target,  data.isDurable, data.isExclusive, data.isAutodel));
             channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
 
             for (Binding item : data.bindings) {
-                String queueName    = data.target;
+                String queueName   = data.target;
                 String exchangeName = environmentSubstitute(item.getTarget());
                 String routingKey   = environmentSubstitute(item.getRouting());
 
@@ -424,11 +461,18 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
             for (Binding item : data.bindings) {
                 String exchangeName = data.target;
-                String queueName    = environmentSubstitute(item.getTarget());
+                String targetName    = environmentSubstitute(item.getTarget());
+                String targetType    = environmentSubstitute(item.getTargetType());
                 String routingKey   = environmentSubstitute(item.getRouting());
 
-                logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", queueName, exchangeName, routingKey));
-                channel.queueBind(queueName, exchangeName, routingKey);
+	        if ( AMQPPluginData.TARGET_TYPE_QUEUE.equals(targetType) )  {
+			logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
+                	channel.queueBind(targetName, exchangeName, routingKey);
+		} else {
+                	logMinimal(String.format("Binding dest Exchange '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
+                	channel.exchangeBind(targetName, exchangeName, routingKey);
+		}
+
             }
         }
     }

@@ -50,15 +50,18 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_BINDING = "binding";
     private static final String FIELD_BINDING_LINE = "line";
     private static final String FIELD_BINDING_LINE_TARGET = "target_value";
+    private static final String FIELD_BINDING_LINE_TARGET_TYPE = "target_type_value";
     private static final String FIELD_BINDING_LINE_ROUTING = "routing_value";
     private static final String FIELD_DECLARE = "declare";
     private static final String FIELD_DURABLE = "durable";
     private static final String FIELD_AUTODEL = "autodel";
     private static final String FIELD_EXCHTYPE = "exchtype";
     private static final String FIELD_EXCLUSIVE = "exclusive";
+    private static final String FIELD_WAITINGCONSUMER = "waiting_consumer";
 
     private static final String DEFAULT_BODY_FIELD = "message";
     private static final String DEFAULT_EXCHTYPE   = AMQPPluginData.EXCHTYPE_DIRECT;
+    private static final String DEFAULT_BINDING_TARGET_TYPE = AMQPPluginData.TARGET_TYPE_QUEUE;
 
     private String uri;
     private String routing;
@@ -70,14 +73,15 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private String port;
     private String vhost;
     private String exchtype;
-    private boolean usessl        = false;
-    private boolean declare       = false;
-    private boolean durable       = true;
-    private boolean autodel       = false;
-    private boolean exclusive     = false;
-    private boolean transactional = false;
-    private String bodyField      = DEFAULT_BODY_FIELD;
-    private String mode           = AMQPPluginData.MODE_CONSUMER;
+    private boolean usessl          = false;
+    private boolean declare         = false;
+    private boolean durable         = true;
+    private boolean autodel         = false;
+    private boolean exclusive       = false;
+    private boolean waitingConsumer = false;   
+    private boolean transactional   = false;
+    private String bodyField        = DEFAULT_BODY_FIELD;
+    private String mode             = AMQPPluginData.MODE_CONSUMER;
 
     private final List<AMQPPluginMeta.Binding> bindings = new ArrayList<AMQPPluginMeta.Binding>();
 
@@ -85,10 +89,12 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         private final String target;
         private final String routing;
+	private final String target_type;
 
-        Binding(String target, String routing)
+        Binding(String target, String target_type, String routing)
         {
             this.target = target;
+	    this.target_type = target_type;
             this.routing = routing;
         }
 
@@ -100,6 +106,10 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         public String getRouting()
         {
             return routing;
+        }
+        public String getTargetType()
+        {
+            return target_type;
         }
     }
 
@@ -183,12 +193,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_DURABLE, isDurable()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_AUTODEL, isAutodel()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_EXCLUSIVE, isExclusive()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_WAITINGCONSUMER, isWaitingConsumer()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_EXCHTYPE, getExchtype()));
 
         bufer.append("    <" + FIELD_BINDING + ">").append(Const.CR);
         for (Binding item : getBindings()) {
             bufer.append("      <" + FIELD_BINDING_LINE + ">").append(Const.CR);
             bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_TARGET, item.getTarget()));
+            bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_TARGET_TYPE, item.getTargetType()));
             bufer.append("        ").append(XMLHandler.addTagValue(FIELD_BINDING_LINE_ROUTING, item.getRouting()));
             bufer.append("      </" + FIELD_BINDING_LINE + ">").append(Const.CR);
         }
@@ -219,6 +231,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setDurable(XMLHandler.getTagValue(stepnode, FIELD_DURABLE));
             setAutodel(XMLHandler.getTagValue(stepnode, FIELD_AUTODEL));
             setExclusive(XMLHandler.getTagValue(stepnode, FIELD_EXCLUSIVE));
+            setWaitingConsumer(XMLHandler.getTagValue(stepnode, FIELD_WAITINGCONSUMER));
             setExchtype(XMLHandler.getTagValue(stepnode, FIELD_EXCHTYPE));
 
             Node binding = XMLHandler.getSubNode(stepnode, FIELD_BINDING);
@@ -228,7 +241,10 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
             for (int i = 0; i < count; i++) {
                 Node lnode = XMLHandler.getSubNodeByNr(binding, FIELD_BINDING_LINE, i);
-                addBinding(XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_TARGET), XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_ROUTING));
+                addBinding(XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_TARGET)
+			, XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_TARGET_TYPE)
+			, XMLHandler.getTagValue(lnode, FIELD_BINDING_LINE_ROUTING)
+			);
             }
 
         } catch (Exception e) {
@@ -258,6 +274,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setDeclare(rep.getStepAttributeString(idStep, FIELD_DECLARE));
             setAutodel(rep.getStepAttributeString(idStep, FIELD_AUTODEL));
             setExclusive(rep.getStepAttributeString(idStep, FIELD_EXCLUSIVE));
+            setWaitingConsumer(rep.getStepAttributeString(idStep, FIELD_WAITINGCONSUMER));
             setExchtype(rep.getStepAttributeString(idStep, FIELD_EXCHTYPE));
 
             int nrbindingLines = rep.countNrStepAttributes(idStep, FIELD_BINDING_LINE_TARGET);
@@ -265,7 +282,9 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             clearBindings();
 
             for (int i = 0; i < nrbindingLines; i++) {
-                addBinding(rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_TARGET), rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_ROUTING));
+                addBinding(rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_TARGET)
+			, rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_TARGET_TYPE)
+			, rep.getStepAttributeString(idStep, i, FIELD_BINDING_LINE_ROUTING));
             }
 
         } catch (KettleDatabaseException dbe) {
@@ -297,12 +316,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             rep.saveStepAttribute(idTransformation, idStep, FIELD_DURABLE, isDurable());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_AUTODEL, isAutodel());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_EXCLUSIVE, isExclusive());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_WAITINGCONSUMER, isWaitingConsumer());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_EXCHTYPE, getExchtype());
 
             int i = 0;
 
             for (Binding item : getBindings()) {
                 rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_TARGET, item.getTarget());
+                rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_TARGET_TYPE, item.getTargetType());
                 rep.saveStepAttribute(idTransformation, idStep, i, FIELD_BINDING_LINE_ROUTING, item.getRouting());
                 i++;
             }
@@ -315,22 +336,22 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     @Override
     public void setDefault()
     {
-        this.uri           = "amqp://guest:guest@localhost:5672";
-        this.mode          = AMQPPluginData.MODE_CONSUMER;
-        this.bodyField     = DEFAULT_BODY_FIELD;
-        this.exchtype	   = DEFAULT_EXCHTYPE;
-        this.username      = "";
-        this.password      = "";
-        this.host          = "";
-        this.port          = "";
-        this.vhost         = "";
-        this.usessl        = false;
-        this.declare       = false;
-        this.durable       = false;
-        this.autodel       = false;
-        this.exclusive     = false;
-        this.transactional = false;
-
+        this.uri             = "amqp://guest:guest@localhost:5672";
+        this.mode            = AMQPPluginData.MODE_CONSUMER;
+        this.bodyField       = DEFAULT_BODY_FIELD;
+        this.exchtype	     = DEFAULT_EXCHTYPE;
+        this.username        = "";
+        this.password        = "";
+        this.host            = "";
+        this.port            = "";
+        this.vhost           = "";
+        this.usessl          = false;
+        this.declare         = false;
+        this.durable         = false;
+        this.autodel         = false;
+        this.exclusive       = false;
+        this.transactional   = false;
+	this.waitingConsumer = false;
         bindings.clear();
     }
 
@@ -510,6 +531,22 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.exclusive = exclusive;
     }
 
+    public boolean isWaitingConsumer()
+    {
+        return waitingConsumer;
+    }
+
+
+    public void setWaitingConsumer(String val)
+    {
+        this.waitingConsumer = Boolean.TRUE.toString().equals(val) || "Y".equals(val);
+    }
+
+    public void setWaitingConsumer(boolean val)
+    {
+        this.waitingConsumer = val;
+    }
+
     public String getBodyField()
     {
         return bodyField;
@@ -578,10 +615,15 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.limit = Long.parseLong(limit);
     }
 
-    public void addBinding(String target, String routing)
+    public void addBinding(String target, String target_type, String routing)
     {
-        this.bindings.add(new AMQPPluginMeta.Binding(target, routing));
+        this.bindings.add(new AMQPPluginMeta.Binding(target, target_type, routing));
     }
+
+//    public void addBinding(String target, String routing)
+//    {
+//        addBinding(target, routing, DEFAULT_BINDING_TARGET_TYPE);
+//    }
 
     public List<AMQPPluginMeta.Binding> getBindings()
     {

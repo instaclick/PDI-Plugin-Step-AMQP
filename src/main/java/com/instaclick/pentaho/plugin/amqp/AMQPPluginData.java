@@ -11,6 +11,9 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public static final String MODE_PRODUCER = "producer";
     public static final String MODE_CONSUMER = "consumer";
 
+    public static final String TARGET_TYPE_EXCHANGE = "exchange";
+    public static final String TARGET_TYPE_QUEUE = "queue";
+
     public static final String EXCHTYPE_FANOUT = "fanout";
     public static final String EXCHTYPE_DIRECT = "direct";
     public static final String EXCHTYPE_HEADERS = "headers";
@@ -28,6 +31,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public boolean isDurable = true;
     public boolean isAutodel = false;
     public boolean isExclusive = false;
+    public boolean isWaitingConsumer = false;
     public String exchtype = "";
     public String body = null;
     public String routing;

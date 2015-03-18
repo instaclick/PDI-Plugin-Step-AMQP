@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -93,6 +94,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formExclusiveLabel;
     private FormData formExclusiveText;
 
+    private Label labelWaitingConsumer;
+    private Button checkWaitingConsumer;
+    private FormData formWaitingConsumerLabel;
+    private FormData formWaitingConsumerText;
+
+
     private Label    labelMode;
     private CCombo   comboMode;
     private FormData formModeLabel;
@@ -138,6 +145,11 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         AMQPPluginData.MODE_PRODUCER
     }));
 
+    private static final List<String> target_types = new ArrayList<String>(Arrays.asList(new String[] {
+        AMQPPluginData.TARGET_TYPE_EXCHANGE,
+        AMQPPluginData.TARGET_TYPE_QUEUE
+    }));
+
     private static final List<String> exchtypes = new ArrayList<String>(Arrays.asList(new String[] {
         AMQPPluginData.EXCHTYPE_FANOUT,
         AMQPPluginData.EXCHTYPE_DIRECT,
@@ -159,17 +171,21 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         }
     };
 
+    private final SelectionAdapter declareModifyListener = new SelectionAdapter() {
+        @Override
+        public void widgetSelected(SelectionEvent e) {
+		if(checkDeclare.getSelection()) {
+	//		hideDeclareRealtedFields();
+		} else {
+	//		showDeclareRelatedFields();
+		}
+        }
+    };
+
     private final SelectionAdapter comboModeListener = new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e) {
-
-            if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) {
-                enableProducerFields();
-            }
-
-            if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) {
-                enableConsumerFields();
-            }
+		setModeDependendFileds();
         }
     };
 
@@ -186,13 +202,35 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input = (AMQPPluginMeta) in;
     }
 
+    private void setModeDependendFileds() {
+       if (AMQPPluginData.MODE_PRODUCER.equals(comboMode.getText())) {
+             enableProducerFields();
+       }
+
+       if (AMQPPluginData.MODE_CONSUMER.equals(comboMode.getText())) {
+             enableConsumerFields();
+       }
+    }
+
+
     private void enableProducerFields()
     {
         textLimit.setVisible(false);
         labelLimit.setVisible(false);
         comboExchtype.setVisible(true);
         labelExchtype.setVisible(true);
+	labelWaitingConsumer.setVisible(false);
+
+	checkWaitingConsumer.setVisible(false);
         labelTarget.setText(getString("AmqpPlugin.Exchange.Label"));
+
+	tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ProducerMode"));
+	tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"));
+
+	//enable type for producer
+//	ColumnInfo targetTypeCI = tableBinding.getColumns()[1];
+//	targetTypeCI.setComboValues(target_types.toArray(new String[target_types.size()]));
+	tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"), ColumnInfo.COLUMN_TYPE_CCOMBO,target_types.toArray(new String[target_types.size()]), true));
     }
 
     private void enableConsumerFields()
@@ -201,7 +239,16 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         labelLimit.setVisible(true);
         comboExchtype.setVisible(false);
         labelExchtype.setVisible(false);
+
+	labelWaitingConsumer.setVisible(true);
+	checkWaitingConsumer.setVisible(true);
+
         labelTarget.setText(getString("AmqpPlugin.Queue.Label"));
+
+	tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ConsumerMode"));
+	tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ConsumerMode"));
+	//disable type for consumer
+	tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ConsumerMode"), ColumnInfo.COLUMN_TYPE_NONE, true));
     }
 
     @Override
@@ -348,14 +395,37 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textPassword.setLayoutData(formPasswordText);
         textPassword.setToolTipText(getString("AmqpPlugin.Password.Tooltip"));
 
+        // UseSsl
+        labelUseSsl = new Label(shell, SWT.RIGHT);
+        labelUseSsl.setText(getString("AmqpPlugin.UseSsl.Label"));
+        props.setLook(labelUseSsl);
+
+        formUseSslLabel       = new FormData();
+        formUseSslLabel.left  = new FormAttachment(0, 0);
+        formUseSslLabel.right = new FormAttachment(8, -margin);
+        formUseSslLabel.top   = new FormAttachment(textPassword , margin);
+
+        labelUseSsl.setLayoutData(formUseSslLabel);
+
+        checkUseSsl = new Button(shell, SWT.CHECK);
+        props.setLook(checkUseSsl);
+        checkUseSsl.addSelectionListener(selectionModifyListener);
+
+        formUseSslText        = new FormData();
+        formUseSslText.left   = new FormAttachment(8, 0);
+        formUseSslText.right  = new FormAttachment(10, 0);
+        formUseSslText.top    = new FormAttachment(textPassword, margin);
+
+        checkUseSsl.setLayoutData(formUseSslText);
+
         // Host line
         labelHost = new Label(shell, SWT.RIGHT);
         labelHost.setText(getString("AmqpPlugin.Host.Label"));
         props.setLook(labelHost);
 
         formHostLabel       = new FormData();
-        formHostLabel.left  = new FormAttachment(0, 0);
-        formHostLabel.right = new FormAttachment(middle, -margin);
+        formHostLabel.left  = new FormAttachment(13, 0);
+        formHostLabel.right = new FormAttachment(18, -margin);
         formHostLabel.top   = new FormAttachment(textPassword , margin);
 
         labelHost.setLayoutData(formHostLabel);
@@ -366,8 +436,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textHost.addModifyListener(modifyListener);
 
         formHostText        = new FormData();
-        formHostText.left   = new FormAttachment(middle, 0);
-        formHostText.right  = new FormAttachment(100, 0);
+        formHostText.left   = new FormAttachment(18, 0);
+        formHostText.right  = new FormAttachment(49, 0);
         formHostText.top    = new FormAttachment(textPassword, margin);
 
         textHost.setLayoutData(formHostText);
@@ -378,9 +448,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         props.setLook(labelPort);
 
         formPortLabel       = new FormData();
-        formPortLabel.left  = new FormAttachment(0, 0);
-        formPortLabel.right = new FormAttachment(middle, -margin);
-        formPortLabel.top   = new FormAttachment(textHost , margin);
+        formPortLabel.left  = new FormAttachment(51, 0);
+        formPortLabel.right = new FormAttachment(56, -margin);
+        formPortLabel.top   = new FormAttachment(textPassword , margin);
 
         labelPort.setLayoutData(formPortLabel);
 
@@ -390,9 +460,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textPort.addModifyListener(modifyListener);
 
         formPortText        = new FormData();
-        formPortText.left   = new FormAttachment(middle, 0);
-        formPortText.right  = new FormAttachment(100, 0);
-        formPortText.top    = new FormAttachment(textHost, margin);
+        formPortText.left   = new FormAttachment(56, 0);
+        formPortText.right  = new FormAttachment(65, 0);
+        formPortText.top    = new FormAttachment(textPassword, margin);
 
         textPort.setLayoutData(formPortText);
 
@@ -402,9 +472,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         props.setLook(labelVhost);
 
         formVhostLabel       = new FormData();
-        formVhostLabel.left  = new FormAttachment(0, 0);
-        formVhostLabel.right = new FormAttachment(middle, -margin);
-        formVhostLabel.top   = new FormAttachment(textPort , margin);
+        formVhostLabel.left  = new FormAttachment(70, 0);
+        formVhostLabel.right = new FormAttachment(75, -margin);
+        formVhostLabel.top   = new FormAttachment(textPassword , margin);
 
         labelVhost.setLayoutData(formVhostLabel);
 
@@ -414,34 +484,11 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textVhost.addModifyListener(modifyListener);
 
         formVhostText        = new FormData();
-        formVhostText.left   = new FormAttachment(middle, 0);
+        formVhostText.left   = new FormAttachment(75, 0);
         formVhostText.right  = new FormAttachment(100, 0);
-        formVhostText.top    = new FormAttachment(textPort, margin);
+        formVhostText.top    = new FormAttachment(textPassword, margin);
 
         textVhost.setLayoutData(formVhostText);
-
-        // UseSsl
-        labelUseSsl = new Label(shell, SWT.RIGHT);
-        labelUseSsl.setText(getString("AmqpPlugin.UseSsl.Label"));
-        props.setLook(labelUseSsl);
-
-        formUseSslLabel       = new FormData();
-        formUseSslLabel.left  = new FormAttachment(0, 0);
-        formUseSslLabel.right = new FormAttachment(middle, -margin);
-        formUseSslLabel.top   = new FormAttachment(textVhost , margin);
-
-        labelUseSsl.setLayoutData(formUseSslLabel);
-
-        checkUseSsl = new Button(shell, SWT.CHECK);
-        props.setLook(checkUseSsl);
-        checkUseSsl.addSelectionListener(selectionModifyListener);
-
-        formUseSslText        = new FormData();
-        formUseSslText.left   = new FormAttachment(middle, 0);
-        formUseSslText.right  = new FormAttachment(100, 0);
-        formUseSslText.top    = new FormAttachment(textVhost, margin);
-
-        checkUseSsl.setLayoutData(formUseSslText);
 
         // Transactional
         labelTransactional = new Label(shell, SWT.RIGHT);
@@ -451,7 +498,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formTransactionalLabel       = new FormData();
         formTransactionalLabel.left  = new FormAttachment(0, 0);
         formTransactionalLabel.right = new FormAttachment(middle, -margin);
-        formTransactionalLabel.top   = new FormAttachment(labelUseSsl , margin);
+        formTransactionalLabel.top   = new FormAttachment(textVhost , margin);
 
         labelTransactional.setLayoutData(formTransactionalLabel);
 
@@ -462,7 +509,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formTransactionalText        = new FormData();
         formTransactionalText.left   = new FormAttachment(middle, 0);
         formTransactionalText.right  = new FormAttachment(100, 0);
-        formTransactionalText.top    = new FormAttachment(labelUseSsl, margin);
+        formTransactionalText.top    = new FormAttachment(textVhost, margin);
 
         checkTransactional.setLayoutData(formTransactionalText);
 
@@ -578,6 +625,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkDeclare = new Button(shell, SWT.CHECK);
         props.setLook(checkDeclare);
         checkDeclare.addSelectionListener(selectionModifyListener);
+        checkDeclare.addSelectionListener(declareModifyListener);
 
         formDeclareText        = new FormData();
         formDeclareText.left   = new FormAttachment(middle, 0);
@@ -621,7 +669,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         formDurableLabel       = new FormData();
         formDurableLabel.left  = new FormAttachment(0, 0);
-        formDurableLabel.right = new FormAttachment(middle, -margin);
+        formDurableLabel.right = new FormAttachment(15, -margin);
         formDurableLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelDurable.setLayoutData(formDurableLabel);
@@ -631,8 +679,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkDurable.addSelectionListener(selectionModifyListener);
 
         formDurableText        = new FormData();
-        formDurableText.left   = new FormAttachment(middle, 0);
-        formDurableText.right  = new FormAttachment(100, 0);
+        formDurableText.left   = new FormAttachment(15, 0);
+        formDurableText.right  = new FormAttachment(25, 0);
         formDurableText.top    = new FormAttachment(comboExchtype, margin);
 
         checkDurable.setLayoutData(formDurableText);
@@ -643,9 +691,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         props.setLook(labelAutodel);
 
         formAutodelLabel       = new FormData();
-        formAutodelLabel.left  = new FormAttachment(0, 0);
-        formAutodelLabel.right = new FormAttachment(middle , -margin);
-        formAutodelLabel.top   = new FormAttachment(checkDurable , margin);
+        formAutodelLabel.left  = new FormAttachment(26, 0);
+        formAutodelLabel.right = new FormAttachment(40 , -margin);
+        formAutodelLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelAutodel.setLayoutData(formAutodelLabel);
 
@@ -654,9 +702,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkAutodel.addSelectionListener(selectionModifyListener);
 
         formAutodelText        = new FormData();
-        formAutodelText.left   = new FormAttachment(middle , 0);
-        formAutodelText.right  = new FormAttachment(100, 0);
-        formAutodelText.top    = new FormAttachment(checkDurable, margin);
+        formAutodelText.left   = new FormAttachment(41 , 0);
+        formAutodelText.right  = new FormAttachment(50, 0);
+        formAutodelText.top    = new FormAttachment(comboExchtype, margin);
 
         checkAutodel.setLayoutData(formAutodelText);
 
@@ -666,9 +714,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         props.setLook(labelExclusive);
 
         formExclusiveLabel       = new FormData();
-        formExclusiveLabel.left  = new FormAttachment(0, 0);
-        formExclusiveLabel.right = new FormAttachment(middle , -margin);
-        formExclusiveLabel.top   = new FormAttachment(checkAutodel , margin);
+        formExclusiveLabel.left  = new FormAttachment(52, 0);
+        formExclusiveLabel.right = new FormAttachment(68 , -margin);
+        formExclusiveLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelExclusive.setLayoutData(formExclusiveLabel);
 
@@ -677,16 +725,43 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkExclusive.addSelectionListener(selectionModifyListener);
 
         formExclusiveText        = new FormData();
-        formExclusiveText.left   = new FormAttachment(middle, 0);
-        formExclusiveText.right  = new FormAttachment(100, 0);
-        formExclusiveText.top    = new FormAttachment(checkAutodel, margin);
+        formExclusiveText.left   = new FormAttachment(69, margin);
+        formExclusiveText.right  = new FormAttachment(75, 0);
+        formExclusiveText.top    = new FormAttachment(comboExchtype, margin);
 
         checkExclusive.setLayoutData(formExclusiveText);
 
-        // Consumer Bindings
+
+        // WaitingConsumer
+        labelWaitingConsumer = new Label(shell, SWT.RIGHT);
+        labelWaitingConsumer.setText(getString("AmqpPlugin.WaitingConsumer.Label"));
+	Color waitConsumerLabel = new Color(shell.getDisplay(), 255, 0, 0);
+	labelWaitingConsumer.setForeground(waitConsumerLabel);
+        props.setLook(labelWaitingConsumer);
+
+        formWaitingConsumerLabel       = new FormData();
+        formWaitingConsumerLabel.left  = new FormAttachment(80, 0);
+        formWaitingConsumerLabel.right = new FormAttachment(90 , -margin);
+        formWaitingConsumerLabel.top   = new FormAttachment(comboExchtype , margin);
+
+        labelWaitingConsumer.setLayoutData(formWaitingConsumerLabel);
+
+        checkWaitingConsumer = new Button(shell, SWT.CHECK);
+        props.setLook(checkWaitingConsumer);
+        checkWaitingConsumer.addSelectionListener(selectionModifyListener);
+
+        formWaitingConsumerText        = new FormData();
+        formWaitingConsumerText.left   = new FormAttachment(91, margin);
+        formWaitingConsumerText.right  = new FormAttachment(100, 0);
+        formWaitingConsumerText.top    = new FormAttachment(comboExchtype, margin);
+
+        checkWaitingConsumer.setLayoutData(formWaitingConsumerText);
+
+
+        // Bindings
         labelBinding = new Label(shell, SWT.NONE);
 
-        labelBinding.setText(getString("AmqpPlugin.Binding.Label")); //$NON-NLS-1$
+        labelBinding.setText(getString("AmqpPlugin.Binding.Label")); 
         props.setLook(labelBinding);
 
         formBindingLabel      = new FormData();
@@ -696,11 +771,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         ColumnInfo[] colinf  = new ColumnInfo[]{
             new ColumnInfo(getString("AmqpPlugin.Binding.Column.Target"), ColumnInfo.COLUMN_TYPE_TEXT, false),
+            new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"), ColumnInfo.COLUMN_TYPE_CCOMBO,target_types.toArray(new String[target_types.size()]), true),
             new ColumnInfo(getString("AmqpPlugin.Binding.Column.RoutingKey"), ColumnInfo.COLUMN_TYPE_TEXT, false)
         };
 
         //colinf[0].setUsingVariables(true);
         //colinf[1].setUsingVariables(true);
+        //colinf[2].setUsingVariables(true);
 
         tableBinding = new TableView(transMeta, shell, SWT.BORDER | SWT.FULL_SELECTION | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL,
             colinf,
@@ -788,6 +865,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkDeclare.setSelection(input.isDeclare());
         checkDurable.setSelection(input.isDurable());
         checkTransactional.setSelection(input.isTransactional());
+        checkAutodel.setSelection(input.isAutodel());
+        checkExclusive.setSelection(input.isExclusive());
+        checkWaitingConsumer.setSelection(input.isWaitingConsumer());
 
         int indexMode     = modes.indexOf(input.getMode());
         int indexExchtype = exchtypes.indexOf(input.getExchtype());
@@ -826,19 +906,26 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
             final Binding binding = input.getBindings().get(i);
             final TableItem item  = tableBinding.table.getItem(i);
             final String target   = binding.getTarget();
+            final String target_type  = binding.getTargetType();
             final String routing  = binding.getRouting();
 
             if ( ! Const.isEmpty(target)) {
                 item.setText(1, target);
             }
 
+            if ( ! Const.isEmpty(target_type)) {
+                item.setText(2, target_type);
+            }
+
             if ( ! Const.isEmpty(routing)) {
-                item.setText(2, routing);
+                item.setText(3, routing);
             }
         }
 
         tableBinding.setRowNums();
         tableBinding.optWidth(true);
+
+ 	setModeDependendFileds();
 
         wStepname.selectAll();
     }
@@ -870,6 +957,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setDurable(checkDurable.getSelection());
         input.setDeclare(checkDeclare.getSelection());
         input.setTransactional(checkTransactional.getSelection());
+        input.setExclusive(checkExclusive.getSelection());
+        input.setWaitingConsumer(checkWaitingConsumer.getSelection());
+        input.setAutodel(checkAutodel.getSelection());
 
         input.setMode(getFieldText(comboMode));
         input.setExchtype(getFieldText(comboExchtype));
@@ -908,13 +998,14 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
             }
 
             String target  = item.getText(1);
-            String routing = item.getText(2);
+            String target_type = item.getText(2);
+            String routing = item.getText(3);
 
             if (Const.isEmpty(target)) {
                 continue;
             }
 
-            input.addBinding(target, routing);
+            input.addBinding(target, target_type, routing);
         }
 
         dispose();

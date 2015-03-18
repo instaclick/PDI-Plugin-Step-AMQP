@@ -43,7 +43,8 @@ PDI Step Configuration
 | Durable               | Durability for message                                                        |
 | Autodelete            | Autodelete Exchange or Queue after produce,consume                            |
 | Exclusive             | for queue , exclsuive usage                                                   |
-| Binding               | Target, Routing, specified                                                    |
+| Binding               | Target, Routing, Target type ( queue or exchange in PRODUCER mode ) specified |
+| Wait for Messages     | Consumer watinign for messages mode                                           |
 
 
 Limitations
