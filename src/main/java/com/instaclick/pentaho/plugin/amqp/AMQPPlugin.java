@@ -190,7 +190,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         do {
 	    if (data.isWaitingConsumer) {
 		    QueueingConsumer.Delivery delivery = null;
-		    do {  delivery = consumer.nextDelivery(10000); } while (!isStopped() && delivery == null);
+		    do {  delivery = consumer.nextDelivery(10000); } while (!isStopped() && delivery == null && !isStepTimedoutAsConsumer() );
 	            
 		    if (delivery == null ) {
 		        return;
@@ -313,6 +313,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         }
     }
 
+    public boolean isStepTimedoutAsConsumer() 
+    {
+     	return data.waitTimeout < getRuntime() && data.waitTimeout != 0;
+    }
+
     @Override
     public boolean init(StepMetaInterface smi, StepDataInterface sdi)
     {
@@ -362,11 +367,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.target         = environmentSubstitute(meta.getTarget());
         data.bindings       = meta.getBindings();
         data.limit          = meta.getLimit();
+	data.prefetchCount  = meta.getPrefetchCount();
+	data.waitTimeout    = meta.getWaitTimeout();
 
         data.isTransactional = meta.isTransactional();
         data.isWaitingConsumer = meta.isWaitingConsumer();
-        data.isConsumer      = AMQPPluginData.MODE_CONSUMER.equals(meta.getMode());
-        data.isProducer      = AMQPPluginData.MODE_PRODUCER.equals(meta.getMode());
+        data.isConsumer      = meta.isConsumer();
+        data.isProducer      = meta.isProducer();
 
         //init Producer
         data.exchtype    = meta.getExchtype();
@@ -425,7 +432,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         conn    = factory.newConnection();
         channel = conn.createChannel();
 
-        channel.basicQos(0);
+	if (data.isConsumer) {
+		channel.basicQos(data.prefetchCount);
+	} else {
+	        channel.basicQos(0);
+	}
 
         if ( ! conn.isOpen()) {
             throw new AMQPException("Unable to open a AMQP connection");

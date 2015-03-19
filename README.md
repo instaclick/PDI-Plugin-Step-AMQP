@@ -45,8 +45,11 @@ PDI Step Configuration
 | Exclusive             | for queue , exclsuive usage                                                   |
 | Binding               | Target, Routing, Target type ( queue or exchange in PRODUCER mode ) specified |
 | Wait for Messages     | Consumer waiting for messages mode                                            |
+| Wait Timeout          | Consumer waiting for messages mode, waiting tiemout, 0 for no timeout         |
+| PrefetchCount         | Consumer mode, basicQos parameter                                             |
 
 
 Limitations
 -----------
 * No declaration for target, These must be "declared" before they can be used.
+* PrefetchCount is incomaptible with Transcations, as kettle

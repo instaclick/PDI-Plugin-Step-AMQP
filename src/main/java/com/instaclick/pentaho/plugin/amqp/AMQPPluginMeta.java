@@ -37,6 +37,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_BODY_FIELD = "body_field";
     private static final String FIELD_ROUTING = "routing";
     private static final String FIELD_LIMIT = "limit";
+    private static final String FIELD_PREFETCHCOUNT = "prefetchCount";
     private static final String FIELD_TARGET = "target";
     private static final String FIELD_MODE = "mode";
     private static final String FIELD_URI = "uri";
@@ -58,6 +59,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_EXCHTYPE = "exchtype";
     private static final String FIELD_EXCLUSIVE = "exclusive";
     private static final String FIELD_WAITINGCONSUMER = "waiting_consumer";
+    private static final String FIELD_WAITTIMEOUT = "waiting_timout";
 
     private static final String DEFAULT_BODY_FIELD = "message";
     private static final String DEFAULT_EXCHTYPE   = AMQPPluginData.EXCHTYPE_DIRECT;
@@ -67,6 +69,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private String routing;
     private String target;
     private Long limit;
+    private Long waitTimeout;
+    private int prefetchCount;
     private String username;
     private String password;
     private String host;
@@ -178,6 +182,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_TRANSACTIONAL, isTransactional()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_BODY_FIELD, getBodyField()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_LIMIT, getLimitString()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_PREFETCHCOUNT, getPrefetchCountString()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_WAITTIMEOUT, getWaitTimeoutString()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_ROUTING, getRouting()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_TARGET, getTarget()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_MODE, getMode()));
@@ -218,6 +224,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setRouting(XMLHandler.getTagValue(stepnode, FIELD_ROUTING));
             setTarget(XMLHandler.getTagValue(stepnode, FIELD_TARGET));
             setLimit(XMLHandler.getTagValue(stepnode, FIELD_LIMIT));
+            setPrefetchCount(XMLHandler.getTagValue(stepnode, FIELD_PREFETCHCOUNT));
+            setWaitTimeout(XMLHandler.getTagValue(stepnode, FIELD_WAITTIMEOUT));
             setMode(XMLHandler.getTagValue(stepnode, FIELD_MODE));
             setUri(XMLHandler.getTagValue(stepnode, FIELD_URI));
 
@@ -261,6 +269,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setRouting(rep.getStepAttributeString(idStep, FIELD_ROUTING));
             setTarget(rep.getStepAttributeString(idStep, FIELD_TARGET));
             setLimit(rep.getStepAttributeString(idStep, FIELD_LIMIT));
+            setPrefetchCount(rep.getStepAttributeString(idStep, FIELD_PREFETCHCOUNT));
+            setWaitTimeout(rep.getStepAttributeString(idStep, FIELD_WAITTIMEOUT));
             setMode(rep.getStepAttributeString(idStep, FIELD_MODE));
             setUri(rep.getStepAttributeString(idStep, FIELD_URI));
 
@@ -301,6 +311,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             rep.saveStepAttribute(idTransformation, idStep, FIELD_TRANSACTIONAL, isTransactional());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_BODY_FIELD, getBodyField());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_LIMIT, getLimitString());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_PREFETCHCOUNT, getPrefetchCountString());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_WAITTIMEOUT, getWaitTimeoutString());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_ROUTING, getRouting());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_TARGET, getTarget());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_MODE, getMode());
@@ -352,6 +364,8 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.exclusive       = false;
         this.transactional   = false;
 	this.waitingConsumer = false;
+        this.prefetchCount   = 0;
+        this.waitTimeout     = 60000L;
         bindings.clear();
     }
 
@@ -430,6 +444,18 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         this.mode = filter;
     }
+
+
+    public boolean isConsumer() 
+    { 
+	return AMQPPluginData.MODE_CONSUMER.equals(getMode()); 
+    }
+
+    public boolean isProducer() 
+    {
+	return AMQPPluginData.MODE_PRODUCER.equals(getMode());
+    }
+
 
     public String getExchtype()
     {
@@ -614,6 +640,66 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
         this.limit = Long.parseLong(limit);
     }
+
+    public Long getWaitTimeout()
+    {
+        if (waitTimeout == null) {
+            waitTimeout = 60000L;
+        }
+
+        return waitTimeout;
+    }
+
+    public String getWaitTimeoutString()
+    {
+        return String.valueOf(getWaitTimeout());
+    }
+
+    public void setWaitTimeout(Long waitTimeout)
+    {
+        this.waitTimeout = waitTimeout;
+    }
+
+    public void setWaitTimeout(String waitTimeout)
+    {
+        this.waitTimeout = null;
+
+        if (Const.isEmpty(waitTimeout)) {
+            return;
+        }
+
+        this.waitTimeout = Long.parseLong(waitTimeout);
+    }
+
+
+
+    public int getPrefetchCount()
+    {
+        return prefetchCount;
+    }
+
+    public String getPrefetchCountString()
+    {
+        return String.valueOf(getPrefetchCount());
+    }
+
+    public void setPrefetchCount(int prefetchCount)
+    {
+        this.prefetchCount = prefetchCount;
+    }
+
+    public void setPrefetchCount(String prefetchCount)
+    {
+        this.prefetchCount = 0;
+
+        if (Const.isEmpty(prefetchCount)) {
+            return;
+        }
+
+        this.prefetchCount = Integer.parseInt(prefetchCount);
+    }
+
+
 
     public void addBinding(String target, String target_type, String routing)
     {

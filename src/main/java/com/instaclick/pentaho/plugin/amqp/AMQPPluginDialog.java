@@ -24,6 +24,7 @@ import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.MessageBox;
 import org.pentaho.di.ui.core.widget.ColumnInfo;
 import org.pentaho.di.ui.core.widget.TableView;
 
@@ -125,6 +126,18 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formLimitLabel;
     private FormData formLimitText;
 
+
+    private Label labelPrefetchCount;
+    private Text textPrefetchCount;
+    private FormData formPrefetchCountLabel;
+    private FormData formPrefetchCountText;
+
+    private Label labelWaitTimeout;
+    private Text textWaitTimeout;
+    private FormData formWaitTimeoutLabel;
+    private FormData formWaitTimeoutText;
+
+
     private Label labelBodyField;
     private TextVar textBodyField;
     private FormData formBodyLabel;
@@ -217,6 +230,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     {
         textLimit.setVisible(false);
         labelLimit.setVisible(false);
+        textPrefetchCount.setVisible(false);
+        labelPrefetchCount.setVisible(false);
+        textWaitTimeout.setVisible(false);
+        labelWaitTimeout.setVisible(false);
         comboExchtype.setVisible(true);
         labelExchtype.setVisible(true);
 	labelWaitingConsumer.setVisible(false);
@@ -237,6 +254,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     {
         textLimit.setVisible(true);
         labelLimit.setVisible(true);
+
+        textPrefetchCount.setVisible(true);
+        labelPrefetchCount.setVisible(true);
+        textWaitTimeout.setVisible(true);
+        labelWaitTimeout.setVisible(true);
+
         comboExchtype.setVisible(false);
         labelExchtype.setVisible(false);
 
@@ -592,7 +615,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         formLimitLabel       = new FormData();
         formLimitLabel.left  = new FormAttachment(0, 0);
-        formLimitLabel.right = new FormAttachment(middle, -margin);
+        formLimitLabel.right = new FormAttachment(25, -margin);
         formLimitLabel.top   = new FormAttachment(textRouting , margin);
 
         labelLimit.setLayoutData(formLimitLabel);
@@ -603,11 +626,37 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textLimit.addModifyListener(modifyListener);
 
         formLimitText        = new FormData();
-        formLimitText.left   = new FormAttachment(middle, 0);
-        formLimitText.right  = new FormAttachment(100, 0);
+        formLimitText.left   = new FormAttachment(25, 0);
+        formLimitText.right  = new FormAttachment(40, 0);
         formLimitText.top    = new FormAttachment(textRouting, margin);
 
         textLimit.setLayoutData(formLimitText);
+
+        // PrefetchCount 
+        labelPrefetchCount = new Label(shell, SWT.RIGHT);
+        labelPrefetchCount.setText(getString("AmqpPlugin.PrefetchCount.Label"));
+	labelPrefetchCount.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
+        props.setLook(labelPrefetchCount);
+
+        formPrefetchCountLabel       = new FormData();
+        formPrefetchCountLabel.left  = new FormAttachment(50, 0);
+        formPrefetchCountLabel.right = new FormAttachment(75, -margin);
+        formPrefetchCountLabel.top   = new FormAttachment(textRouting , margin);
+
+        labelPrefetchCount.setLayoutData(formPrefetchCountLabel);
+
+        textPrefetchCount = new Text(shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textPrefetchCount);
+        textPrefetchCount.addModifyListener(modifyListener);
+
+        formPrefetchCountText        = new FormData();
+        formPrefetchCountText.left   = new FormAttachment(75, 0);
+        formPrefetchCountText.right  = new FormAttachment(100, 0);
+        formPrefetchCountText.top    = new FormAttachment(textRouting, margin);
+
+        textPrefetchCount.setLayoutData(formPrefetchCountText);
+
 
 
         // DecalreOption
@@ -669,7 +718,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         formDurableLabel       = new FormData();
         formDurableLabel.left  = new FormAttachment(0, 0);
-        formDurableLabel.right = new FormAttachment(15, -margin);
+        formDurableLabel.right = new FormAttachment(12, -margin);
         formDurableLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelDurable.setLayoutData(formDurableLabel);
@@ -679,8 +728,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkDurable.addSelectionListener(selectionModifyListener);
 
         formDurableText        = new FormData();
-        formDurableText.left   = new FormAttachment(15, 0);
-        formDurableText.right  = new FormAttachment(25, 0);
+        formDurableText.left   = new FormAttachment(12, 0);
+        formDurableText.right  = new FormAttachment(17, 0);
         formDurableText.top    = new FormAttachment(comboExchtype, margin);
 
         checkDurable.setLayoutData(formDurableText);
@@ -691,8 +740,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         props.setLook(labelAutodel);
 
         formAutodelLabel       = new FormData();
-        formAutodelLabel.left  = new FormAttachment(26, 0);
-        formAutodelLabel.right = new FormAttachment(40 , -margin);
+        formAutodelLabel.left  = new FormAttachment(20, 0);
+        formAutodelLabel.right = new FormAttachment(30 , -margin);
         formAutodelLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelAutodel.setLayoutData(formAutodelLabel);
@@ -702,8 +751,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkAutodel.addSelectionListener(selectionModifyListener);
 
         formAutodelText        = new FormData();
-        formAutodelText.left   = new FormAttachment(41 , 0);
-        formAutodelText.right  = new FormAttachment(50, 0);
+        formAutodelText.left   = new FormAttachment(30 , 0);
+        formAutodelText.right  = new FormAttachment(35, 0);
         formAutodelText.top    = new FormAttachment(comboExchtype, margin);
 
         checkAutodel.setLayoutData(formAutodelText);
@@ -714,8 +763,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         props.setLook(labelExclusive);
 
         formExclusiveLabel       = new FormData();
-        formExclusiveLabel.left  = new FormAttachment(52, 0);
-        formExclusiveLabel.right = new FormAttachment(68 , -margin);
+        formExclusiveLabel.left  = new FormAttachment(38, 0);
+        formExclusiveLabel.right = new FormAttachment(50 , -margin);
         formExclusiveLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelExclusive.setLayoutData(formExclusiveLabel);
@@ -725,8 +774,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkExclusive.addSelectionListener(selectionModifyListener);
 
         formExclusiveText        = new FormData();
-        formExclusiveText.left   = new FormAttachment(69, margin);
-        formExclusiveText.right  = new FormAttachment(75, 0);
+        formExclusiveText.left   = new FormAttachment(50, margin);
+        formExclusiveText.right  = new FormAttachment(55, 0);
         formExclusiveText.top    = new FormAttachment(comboExchtype, margin);
 
         checkExclusive.setLayoutData(formExclusiveText);
@@ -735,13 +784,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         // WaitingConsumer
         labelWaitingConsumer = new Label(shell, SWT.RIGHT);
         labelWaitingConsumer.setText(getString("AmqpPlugin.WaitingConsumer.Label"));
-	Color waitConsumerLabel = new Color(shell.getDisplay(), 255, 0, 0);
-	labelWaitingConsumer.setForeground(waitConsumerLabel);
+	labelWaitingConsumer.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
         props.setLook(labelWaitingConsumer);
 
         formWaitingConsumerLabel       = new FormData();
-        formWaitingConsumerLabel.left  = new FormAttachment(80, 0);
-        formWaitingConsumerLabel.right = new FormAttachment(90 , -margin);
+        formWaitingConsumerLabel.left  = new FormAttachment(60, 0);
+        formWaitingConsumerLabel.right = new FormAttachment(72 , -margin);
         formWaitingConsumerLabel.top   = new FormAttachment(comboExchtype , margin);
 
         labelWaitingConsumer.setLayoutData(formWaitingConsumerLabel);
@@ -751,11 +799,38 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         checkWaitingConsumer.addSelectionListener(selectionModifyListener);
 
         formWaitingConsumerText        = new FormData();
-        formWaitingConsumerText.left   = new FormAttachment(91, margin);
-        formWaitingConsumerText.right  = new FormAttachment(100, 0);
+        formWaitingConsumerText.left   = new FormAttachment(72, margin);
+        formWaitingConsumerText.right  = new FormAttachment(75, 0);
         formWaitingConsumerText.top    = new FormAttachment(comboExchtype, margin);
 
         checkWaitingConsumer.setLayoutData(formWaitingConsumerText);
+
+
+        // WaitTimeout
+        labelWaitTimeout = new Label(shell, SWT.RIGHT);
+        labelWaitTimeout.setText(getString("AmqpPlugin.WaitTimeout.Label"));
+	labelWaitTimeout.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
+        props.setLook(labelWaitTimeout);
+
+        formWaitTimeoutLabel       = new FormData();
+        formWaitTimeoutLabel.left  = new FormAttachment(77, 0);
+        formWaitTimeoutLabel.right = new FormAttachment(90, -margin);
+        formWaitTimeoutLabel.top   = new FormAttachment(comboExchtype , margin);
+
+        labelWaitTimeout.setLayoutData(formWaitTimeoutLabel);
+
+        textWaitTimeout = new Text(shell, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textWaitTimeout);
+        textWaitTimeout.addModifyListener(modifyListener);
+
+        formWaitTimeoutText        = new FormData();
+        formWaitTimeoutText.left   = new FormAttachment(90, 0);
+        formWaitTimeoutText.right  = new FormAttachment(100, 0);
+        formWaitTimeoutText.top    = new FormAttachment(comboExchtype, margin);
+
+        textWaitTimeout.setLayoutData(formWaitTimeoutText);
+
 
 
         // Bindings
@@ -902,6 +977,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         setFieldText(textPassword, input.getPassword());
         setFieldText(textBodyField, input.getBodyField());
 
+        setFieldText(textPrefetchCount, input.getPrefetchCountString());
+        setFieldText(textWaitTimeout, input.getWaitTimeoutString());
+
+
         for (int i = 0; i < input.getBindings().size(); i++) {
             final Binding binding = input.getBindings().get(i);
             final TableItem item  = tableBinding.table.getItem(i);
@@ -952,6 +1031,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setVhost(getFieldText(textVhost));
         input.setRouting(getFieldText(textRouting));
         input.setLimit(getFieldText(textLimit));
+        input.setPrefetchCount(getFieldText(textPrefetchCount));
+        input.setWaitTimeout(getFieldText(textWaitTimeout));
 
         input.setUseSsl(checkUseSsl.getSelection());
         input.setDurable(checkDurable.getSelection());
@@ -983,6 +1064,17 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         //Save Binding Table
         int count = tableBinding.nrNonEmpty();
+
+
+	
+	if ( input.isConsumer() && input.isTransactional() && input.getPrefetchCount() > 0 ) {
+		MessageBox mb = new MessageBox( shell, SWT.OK | SWT.ICON_ERROR );
+		mb.setMessage( getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported" ) );
+		mb.setText( getString(  "AmqpPlugin.Error" ) );
+		mb.open();
+		textPrefetchCount.setFocus();
+		return;
+	}
 
         // nothing to save
         if (count <= 0) {

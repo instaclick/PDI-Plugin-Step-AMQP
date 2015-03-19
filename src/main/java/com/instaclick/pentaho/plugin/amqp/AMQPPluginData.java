@@ -38,6 +38,8 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public String target;
     public long amqpTag;
     public Long limit;
+    public Long waitTimeout;
+    public int prefetchCount=0;
     public long count = 0;
 
     public AMQPPluginData()
