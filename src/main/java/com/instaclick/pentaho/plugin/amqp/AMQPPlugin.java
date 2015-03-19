@@ -438,6 +438,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	        channel.basicQos(0);
 	}
 
+	if ( data.isConsumer && data.isTransactional && data.prefetchCount > 0 ) {
+            throw new AMQPException("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported");
+	}
+
         if ( ! conn.isOpen()) {
             throw new AMQPException("Unable to open a AMQP connection");
         }
