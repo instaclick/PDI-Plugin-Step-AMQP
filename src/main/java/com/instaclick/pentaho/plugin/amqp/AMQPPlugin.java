@@ -192,7 +192,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 		    QueueingConsumer.Delivery delivery = null;
 		    do {  delivery = consumer.nextDelivery(10000); } while (!isStopped() && delivery == null && !isStepTimedoutAsConsumer() );
 	            
-		    if (delivery == null ) {
+		    if (delivery == null || isStepTimedoutAsConsumer() ) {
 		        return;
 		    }
 
