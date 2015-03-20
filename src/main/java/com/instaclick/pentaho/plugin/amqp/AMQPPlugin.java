@@ -188,11 +188,11 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 		channel.basicConsume(data.target, false, consumer);
 	}
         do {
-	    if (data.isWaitingConsumer) {
+	    if (data.isWaitingConsumer ) {
 		    QueueingConsumer.Delivery delivery = null;
-		    do {  delivery = consumer.nextDelivery(10000); } while (!isStopped() && delivery == null && !isStepTimedoutAsConsumer() );
+		    while (!isStopped() && delivery == null && !isStepTimedoutAsConsumer() ) {  delivery = consumer.nextDelivery(10000); } ;
 	            
-		    if (delivery == null || isStepTimedoutAsConsumer() ) {
+		    if (delivery == null  ) {
 		        return;
 		    }
 
@@ -203,6 +203,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	            data.routing = delivery.getEnvelope().getRoutingKey();
 	            data.count ++;		    
 	            data.amqpTag = tag;
+		    logRowlevel("Delivery tag: " + data.amqpTag, data);
 
 	    } else {
 	            response = channel.basicGet(data.target, false);
@@ -315,7 +316,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
     public boolean isStepTimedoutAsConsumer() 
     {
-     	return data.waitTimeout < getRuntime() && data.waitTimeout != 0;
+     	return data.waitTimeout < getRuntime() && data.waitTimeout != 0 && data.isConsumer;
     }
 
     @Override
