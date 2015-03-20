@@ -346,7 +346,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         String routing  = environmentSubstitute(meta.getRouting());
         String uri      = environmentSubstitute(meta.getUri());
         String username = environmentSubstitute(meta.getUsername());
-        String password = environmentSubstitute(meta.getPassword());
+        String password = org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted(environmentSubstitute(meta.getPassword()));
         String host     = environmentSubstitute(meta.getHost());
         String vhost    = environmentSubstitute(meta.getVhost());
         Integer port    = null;
