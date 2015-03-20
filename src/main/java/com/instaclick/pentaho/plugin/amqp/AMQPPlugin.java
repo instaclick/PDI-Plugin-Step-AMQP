@@ -179,10 +179,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 		consumer = new QueueingConsumer(channel) {
 		   @Override
 		  public void handleCancel(String consumerTag) throws IOException {
-			logMinimal(consumerTag + "Canceled");
+			logBasic(consumerTag + "Canceled");
 		  }
 		  public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-			logMinimal(consumerTag + " :SHUTDOWN: " + sig.getMessage() );
+			logDebug(consumerTag + " :SHUTDOWN: " + sig.getMessage() );
 		  }
 		};
 		channel.basicConsume(data.target, false, consumer);
@@ -203,7 +203,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	            data.routing = delivery.getEnvelope().getRoutingKey();
 	            data.count ++;		    
 	            data.amqpTag = tag;
-		    logRowlevel("Delivery tag: " + data.amqpTag, data);
+
+		    String contentType = delivery.getProperties().getContentType();
+		    logRowlevel("Content Type for " + data.amqpTag + " : " + contentType);
 
 	    } else {
 	            response = channel.basicGet(data.target, false);
