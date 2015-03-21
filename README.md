@@ -30,7 +30,7 @@ PDI Step Configuration
 | Type                  | If the step is a consumer or a producer                                       |
 | URI                   | AMQP connection URI (amqp://userName:password@hostName:portNumber/virtualHost)|
 | Username              | Username , can be specified as variables                                      |
-| Password              | Password , can be specified as variables                                      |
+| Password              | Password , can be specified as variables, can be Encrypted                    |
 | Host                  | Host, can be specified as variables                                           |
 | Port                  | Port , can be specified with variables                                        |
 | Vhost                 | VirtualHost , can be specified with variables                                 |
