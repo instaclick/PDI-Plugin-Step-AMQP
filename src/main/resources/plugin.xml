@@ -5,6 +5,7 @@
     description="IC AMQP Plugin"
     tooltip="IC AMQP Plugin"
     category="Transform"
+    documentation_url="https://github.com/instaclick/PDI-Plugin-Step-AMQP/blob/2.0.x/README.md"
     classname="com.instaclick.pentaho.plugin.amqp.AMQPPluginMeta">
 
     <libraries>
