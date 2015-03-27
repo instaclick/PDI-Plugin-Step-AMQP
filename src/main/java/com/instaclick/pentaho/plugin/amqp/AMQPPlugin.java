@@ -239,8 +239,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             }
 
             if ( ! data.isTransactional) {
-                logDebug("basicAck : " + data.amqpTag);
-                channel.basicAck(data.amqpTag, true);
+		if (! data.isRequeue ) {
+	          logDebug("basicAck : " + data.amqpTag);
+	          channel.basicAck(data.amqpTag, true);
+		} else {
+	          logDebug("basicNAck : " + data.amqpTag);
+	          channel.basicNack(data.amqpTag, true, true);
+		}
             }
 
 
@@ -258,10 +263,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         if (data.isConsumer && data.isTransactional) {
             try {
-
-                logMinimal("Ack messages : " + data.amqpTag);
-
-                channel.basicAck(data.amqpTag, true);
+                if (! data.isRequeue ) {
+	          logMinimal("Ack messages : " + data.amqpTag);
+                  channel.basicAck(data.amqpTag, true);
+		} else {
+	          logMinimal("DEVELOPMENT ONLY PLEASE ! Nack Messages, requeu : " + data.amqpTag);
+	          channel.basicNack(data.amqpTag, true, true);
+		}
             } catch (IOException ex) {
                 logError(ex.getMessage());
             }
@@ -442,13 +450,17 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	        channel.basicQos(0);
 	}
 
+
+
+
 	if ( data.isConsumer && data.isTransactional && data.prefetchCount > 0 ) {
             throw new AMQPException(getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported"));
 	}
 
 	if ( data.isConsumer && data.isRequeue ) {
-            throw new AMQPException(getString("AmqpPlugin.Requeue.NIMessage"));
+            logMinimal(getString("AmqpPlugin.Info.RequeueDevelopmentUsage"));
 	}
+
 
 
         if ( ! conn.isOpen()) {

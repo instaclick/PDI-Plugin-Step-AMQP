@@ -47,7 +47,7 @@ PDI Step Configuration
 | Wait for Messages     | Consumer waiting for messages mode                                            |
 | Wait Timeout          | Consumer waiting for messages mode, waiting tiemout, 0 for no timeout         |
 | PrefetchCount         | Consumer mode, basicQos parameter                                             |
-| Requeue               | Proposed, to be implemented soon                                              |
+| Requeue               | For consumer. after receiving messages, Nack them with requeue flag           |
 
 
 Limitations
