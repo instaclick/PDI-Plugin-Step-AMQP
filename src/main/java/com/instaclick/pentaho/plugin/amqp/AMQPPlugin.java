@@ -375,6 +375,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         data.isTransactional = meta.isTransactional();
         data.isWaitingConsumer = meta.isWaitingConsumer();
+        data.isRequeue = meta.isRequeue();
         data.isConsumer      = meta.isConsumer();
         data.isProducer      = meta.isProducer();
 
@@ -442,8 +443,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 	}
 
 	if ( data.isConsumer && data.isTransactional && data.prefetchCount > 0 ) {
-            throw new AMQPException("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported");
+            throw new AMQPException(getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported"));
 	}
+
+	if ( data.isConsumer && data.isRequeue ) {
+            throw new AMQPException(getString("AmqpPlugin.Requeue.NIMessage"));
+	}
+
 
         if ( ! conn.isOpen()) {
             throw new AMQPException("Unable to open a AMQP connection");

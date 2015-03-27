@@ -59,6 +59,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_EXCHTYPE = "exchtype";
     private static final String FIELD_EXCLUSIVE = "exclusive";
     private static final String FIELD_WAITINGCONSUMER = "waiting_consumer";
+    private static final String FIELD_REQUEUE = "requeue";
     private static final String FIELD_WAITTIMEOUT = "waiting_timout";
 
     private static final String DEFAULT_BODY_FIELD = "message";
@@ -81,6 +82,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private boolean declare         = false;
     private boolean durable         = true;
     private boolean autodel         = false;
+    private boolean requeue         = false;
     private boolean exclusive       = false;
     private boolean waitingConsumer = false;   
     private boolean transactional   = false;
@@ -200,6 +202,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_AUTODEL, isAutodel()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_EXCLUSIVE, isExclusive()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_WAITINGCONSUMER, isWaitingConsumer()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REQUEUE, isRequeue()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_EXCHTYPE, getExchtype()));
 
         bufer.append("    <" + FIELD_BINDING + ">").append(Const.CR);
@@ -240,6 +243,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setAutodel(XMLHandler.getTagValue(stepnode, FIELD_AUTODEL));
             setExclusive(XMLHandler.getTagValue(stepnode, FIELD_EXCLUSIVE));
             setWaitingConsumer(XMLHandler.getTagValue(stepnode, FIELD_WAITINGCONSUMER));
+            setRequeue(XMLHandler.getTagValue(stepnode, FIELD_REQUEUE));
             setExchtype(XMLHandler.getTagValue(stepnode, FIELD_EXCHTYPE));
 
             Node binding = XMLHandler.getSubNode(stepnode, FIELD_BINDING);
@@ -285,6 +289,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setAutodel(rep.getStepAttributeString(idStep, FIELD_AUTODEL));
             setExclusive(rep.getStepAttributeString(idStep, FIELD_EXCLUSIVE));
             setWaitingConsumer(rep.getStepAttributeString(idStep, FIELD_WAITINGCONSUMER));
+            setRequeue(rep.getStepAttributeString(idStep, FIELD_REQUEUE));
             setExchtype(rep.getStepAttributeString(idStep, FIELD_EXCHTYPE));
 
             int nrbindingLines = rep.countNrStepAttributes(idStep, FIELD_BINDING_LINE_TARGET);
@@ -329,6 +334,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             rep.saveStepAttribute(idTransformation, idStep, FIELD_AUTODEL, isAutodel());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_EXCLUSIVE, isExclusive());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_WAITINGCONSUMER, isWaitingConsumer());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_REQUEUE, isRequeue());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_EXCHTYPE, getExchtype());
 
             int i = 0;
@@ -361,6 +367,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.declare         = false;
         this.durable         = false;
         this.autodel         = false;
+	this.requeue	     = false;
         this.exclusive       = false;
         this.transactional   = false;
 	this.waitingConsumer = false;
@@ -572,6 +579,26 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         this.waitingConsumer = val;
     }
+
+
+
+    public boolean isRequeue()
+    {
+        return requeue;
+    }
+
+
+    public void setRequeue(String val)
+    {
+        this.requeue = Boolean.TRUE.toString().equals(val) || "Y".equals(val);
+    }
+
+    public void setRequeue(boolean val)
+    {
+        this.requeue = val;
+    }
+
+
 
     public String getBodyField()
     {

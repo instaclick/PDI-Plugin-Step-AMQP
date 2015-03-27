@@ -32,6 +32,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public boolean isAutodel = false;
     public boolean isExclusive = false;
     public boolean isWaitingConsumer = false;
+    public boolean isRequeue = false;
     public String exchtype = "";
     public String body = null;
     public String routing;
