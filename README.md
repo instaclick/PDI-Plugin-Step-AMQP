@@ -30,7 +30,7 @@ PDI Step Configuration
 | Type                  | If the step is a consumer or a producer                                       |
 | URI                   | AMQP connection URI (amqp://userName:password@hostName:portNumber/virtualHost)|
 | Username              | Username , can be specified as variables                                      |
-| Password              | Password , can be specified as variables                                      |
+| Password              | Password , can be specified as variables, can be Encrypted                    |
 | Host                  | Host, can be specified as variables                                           |
 | Port                  | Port , can be specified with variables                                        |
 | Vhost                 | VirtualHost , can be specified with variables                                 |
@@ -43,9 +43,14 @@ PDI Step Configuration
 | Durable               | Durability for message                                                        |
 | Autodelete            | Autodelete Exchange or Queue after produce,consume                            |
 | Exclusive             | for queue , exclsuive usage                                                   |
-| Binding               | Target, Routing, specified                                                    |
+| Binding               | Target, Routing, Target type ( queue or exchange in PRODUCER mode ) specified |
+| Wait for Messages     | Consumer waiting for messages mode                                            |
+| Wait Timeout          | Consumer waiting for messages mode, waiting tiemout, 0 for no timeout         |
+| PrefetchCount         | Consumer mode, basicQos parameter                                             |
+| Requeue               | For consumer. after receiving messages, Nack them with requeue flag           |
 
 
 Limitations
 -----------
 * No declaration for target, These must be "declared" before they can be used.
+* PrefetchCount is incomaptible with Transcations, as kettle
