@@ -19,6 +19,7 @@ import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
+import static org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;
@@ -30,6 +31,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     private AMQPPluginMeta meta;
 
     private ConnectionFactory factory = new ConnectionFactory();
+    private QueueingConsumer consumer = null;
     private Connection conn = null;
     private Channel channel = null;
 
@@ -48,7 +50,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         @Override
         public void transFinished(Trans trans) throws KettleException
         {
-            if (!data.isTransactional) {
+            logMinimal("Trans Finished - transactional=" + data.isTransactional);
+
+            if ( ! data.isTransactional) {
                 return;
             }
 
@@ -71,8 +75,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     @Override
     public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException, KettleStepException
     {
-        meta = (AMQPPluginMeta) smi;
-        data = (AMQPPluginData) sdi;
+        meta       = (AMQPPluginMeta) smi;
+        data       = (AMQPPluginData) sdi;
         Object[] r = getRow();
 
         if (first) {
@@ -123,7 +127,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
     private void produce(Object[] r) throws IOException, KettleStepException
     {
-        if (data.isTransactional && !data.isTxOpen) {
+        if (data.isTransactional && ! data.isTxOpen) {
             channel.txSelect();
 
             data.isTxOpen = true;
@@ -170,84 +174,73 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         }
     }
 
+    private boolean consumeData(long timeout) throws IOException, InterruptedException
+    {
+        if (data.isWaitingConsumer) {
+            QueueingConsumer.Delivery delivery = consumer.nextDelivery(timeout);
+
+            if (delivery == null) {
+                return false;
+            }
+
+            final byte[] body = delivery.getBody();
+            final long tag    = delivery.getEnvelope().getDeliveryTag();
+
+            data.routing = delivery.getEnvelope().getRoutingKey();
+            data.body    = new String(body);
+            data.amqpTag = tag;
+            data.count ++;
+
+            return true;
+        }
+
+        GetResponse response = channel.basicGet(data.target, false);
+
+        if (response == null) {
+            return false;
+        }
+
+        final byte[] body = response.getBody();
+        final long tag    = response.getEnvelope().getDeliveryTag();
+
+        data.routing = response.getEnvelope().getRoutingKey();
+        data.body    = new String(body);
+        data.amqpTag = tag;
+        data.count ++;
+
+        return true;
+    }
+
     private void consume() throws IOException, KettleStepException, InterruptedException
     {
-        GetResponse response 		= null;
-	QueueingConsumer consumer 	= null;
-        if (data.isWaitingConsumer) { 
-		logMinimal("WAITING FOR MESSAGES");
-		consumer = new QueueingConsumer(channel) {
-		   @Override
-		  public void handleCancel(String consumerTag) throws IOException {
-			logBasic(consumerTag + "Canceled");
-		  }
-		  public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig) {
-			logDebug(consumerTag + " :SHUTDOWN: " + sig.getMessage() );
-		  }
-		};
-		channel.basicConsume(data.target, false, consumer);
-	}
+        if (data.isWaitingConsumer) {
+            logMinimal("WAITING FOR MESSAGES : " + data.waitTimeout);
+            channel.basicConsume(data.target, false, consumer);
+        }
+
         do {
-	    if (data.isWaitingConsumer ) {
-		    QueueingConsumer.Delivery delivery = null;
-		    while (!isStopped() && delivery == null && !isStepTimedoutAsConsumer() ) {  delivery = consumer.nextDelivery(10000); } ;
-	            
-		    if (delivery == null  ) {
-		        return;
-		    }
-
-	            final byte[] body = delivery.getBody();
-	            final long tag    = delivery.getEnvelope().getDeliveryTag();
-
-	            data.body    = new String(body);
-	            data.routing = delivery.getEnvelope().getRoutingKey();
-	            data.count ++;		    
-	            data.amqpTag = tag;
-
-		    String contentType = delivery.getProperties().getContentType();
-		    logRowlevel("Content Type for " + data.amqpTag + " : " + contentType);
-
-	    } else {
-	            response = channel.basicGet(data.target, false);
-
-        	    if (response == null) {
-	                return;
-	            }
-
-	            final byte[] body = response.getBody();
-	            final long tag    = response.getEnvelope().getDeliveryTag();
-
-	            data.body    = new String(body);
-	            data.routing = response.getEnvelope().getRoutingKey();
-	            data.count ++;
-	            data.amqpTag = tag;
-
-	    }
+            if ( ! consumeData(data.waitTimeout)) {
+                return;
+            }
 
             // safely add the unique field at the end of the output row
-            Object[] r = RowDataUtil.allocateRowData(data.outputRowMeta.size());
+            Object[] row = RowDataUtil.allocateRowData(data.outputRowMeta.size());
 
-            r[data.bodyFieldIndex] = data.body;
-            r[data.routingIndex]   = data.routing;
+            row[data.bodyFieldIndex] = data.body;
+            row[data.routingIndex]   = data.routing;
 
             // put the row to the output row stream
-            putRow(data.outputRowMeta, r);
+            putRow(data.outputRowMeta, row);
 
             // log progress
             if (checkFeedback(getLinesWritten())) {
                 logBasic(String.format("liner %s", getLinesWritten()));
             }
 
-            if ( ! data.isTransactional) {
-		if (! data.isRequeue ) {
-	          logDebug("basicAck : " + data.amqpTag);
-	          channel.basicAck(data.amqpTag, true);
-		} else {
-	          logDebug("basicNAck : " + data.amqpTag);
-	          channel.basicNack(data.amqpTag, true, true);
-		}
+            if ( ! data.isTransactional && ! data.isRequeue) {
+                logDebug("basicAck : " + data.amqpTag);
+                channel.basicAck(data.amqpTag, true);
             }
-
 
             if (data.count >= data.limit) {
                 logBasic(String.format("Message limit %s", data.count));
@@ -261,15 +254,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     {
         logMinimal("Flush invoked");
 
-        if (data.isConsumer && data.isTransactional) {
+        if (data.isConsumer && data.isTransactional && ! data.isRequeue) {
             try {
-                if (! data.isRequeue ) {
-	          logMinimal("Ack messages : " + data.amqpTag);
-                  channel.basicAck(data.amqpTag, true);
-		} else {
-	          logMinimal("DEVELOPMENT ONLY PLEASE ! Nack Messages, requeu : " + data.amqpTag);
-	          channel.basicNack(data.amqpTag, true, true);
-		}
+                logMinimal("Ack messages : " + data.amqpTag);
+                channel.basicAck(data.amqpTag, true);
             } catch (IOException ex) {
                 logError(ex.getMessage());
             }
@@ -324,11 +312,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         }
     }
 
-    public boolean isStepTimedoutAsConsumer() 
-    {
-     	return data.waitTimeout < getRuntime() && data.waitTimeout != 0 && data.isConsumer;
-    }
-
     @Override
     public boolean init(StepMetaInterface smi, StepDataInterface sdi)
     {
@@ -352,14 +335,14 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         // use meta.getFields() to change it, so it reflects the output row structure
         meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
 
+        Integer port    = null;
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
         String uri      = environmentSubstitute(meta.getUri());
-        String username = environmentSubstitute(meta.getUsername());
-        String password = org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted(environmentSubstitute(meta.getPassword()));
         String host     = environmentSubstitute(meta.getHost());
         String vhost    = environmentSubstitute(meta.getVhost());
-        Integer port    = null;
+        String username = environmentSubstitute(meta.getUsername());
+        String password = decryptPasswordOptionallyEncrypted(environmentSubstitute(meta.getPassword()));
 
         if ( ! Const.isEmpty(meta.getPort())) {
             port = Integer.parseInt(environmentSubstitute(meta.getPort()));
@@ -378,14 +361,14 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.target         = environmentSubstitute(meta.getTarget());
         data.bindings       = meta.getBindings();
         data.limit          = meta.getLimit();
-	data.prefetchCount  = meta.getPrefetchCount();
-	data.waitTimeout    = meta.getWaitTimeout();
+        data.prefetchCount  = meta.getPrefetchCount();
+        data.waitTimeout    = meta.getWaitTimeout();
 
-        data.isTransactional = meta.isTransactional();
+        data.isTransactional   = meta.isTransactional();
         data.isWaitingConsumer = meta.isWaitingConsumer();
-        data.isRequeue = meta.isRequeue();
-        data.isConsumer      = meta.isConsumer();
-        data.isProducer      = meta.isProducer();
+        data.isRequeue         = meta.isRequeue();
+        data.isConsumer        = meta.isConsumer();
+        data.isProducer        = meta.isProducer();
 
         //init Producer
         data.exchtype    = meta.getExchtype();
@@ -443,25 +426,17 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         conn    = factory.newConnection();
         channel = conn.createChannel();
+        int qos = data.isConsumer ? data.prefetchCount : 0;
 
-	if (data.isConsumer) {
-		channel.basicQos(data.prefetchCount);
-	} else {
-	        channel.basicQos(0);
-	}
+        channel.basicQos(qos);
 
-
-
-
-	if ( data.isConsumer && data.isTransactional && data.prefetchCount > 0 ) {
+        if ( data.isConsumer && data.isTransactional && data.prefetchCount > 0 ) {
             throw new AMQPException(getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported"));
-	}
+        }
 
-	if ( data.isConsumer && data.isRequeue ) {
+        if ( data.isConsumer && data.isRequeue ) {
             logMinimal(getString("AmqpPlugin.Info.RequeueDevelopmentUsage"));
-	}
-
-
+        }
 
         if ( ! conn.isOpen()) {
             throw new AMQPException("Unable to open a AMQP connection");
@@ -475,13 +450,29 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             getTrans().addTransListener(transListener);
         }
 
+        if (data.isWaitingConsumer) {
+            consumer = new QueueingConsumer(channel) {
+                @Override
+                public void handleCancel(String consumerTag) throws IOException
+                {
+                    logBasic(consumerTag + "Canceled");
+                }
+
+                @Override
+                public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig)
+                {
+                    logDebug(consumerTag + " :SHUTDOWN: " + sig.getMessage());
+                }
+            };
+    }
+
         //Consumer Delcare Queue/Exchanges and Binding
         if (data.isConsumer && data.isDeclare) {
             logMinimal(String.format("Declaring Queue '%s' { durable:%s, exclusive:%s, auto_delete:%s}", data.target,  data.isDurable, data.isExclusive, data.isAutodel));
             channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
 
             for (Binding item : data.bindings) {
-                String queueName   = data.target;
+                String queueName    = data.target;
                 String exchangeName = environmentSubstitute(item.getTarget());
                 String routingKey   = environmentSubstitute(item.getRouting());
 
@@ -497,18 +488,19 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
             for (Binding item : data.bindings) {
                 String exchangeName = data.target;
-                String targetName    = environmentSubstitute(item.getTarget());
-                String targetType    = environmentSubstitute(item.getTargetType());
+                String targetName   = environmentSubstitute(item.getTarget());
                 String routingKey   = environmentSubstitute(item.getRouting());
+                String targetType   = environmentSubstitute(item.getTargetType());
 
-	        if ( AMQPPluginData.TARGET_TYPE_QUEUE.equals(targetType) )  {
-			logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
-                	channel.queueBind(targetName, exchangeName, routingKey);
-		} else {
-                	logMinimal(String.format("Binding dest Exchange '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
-                	channel.exchangeBind(targetName, exchangeName, routingKey);
-		}
+                if (AMQPPluginData.TARGET_TYPE_QUEUE.equals(targetType))  {
+                    logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
+                    channel.queueBind(targetName, exchangeName, routingKey);
 
+                    continue;
+                }
+
+                logMinimal(String.format("Binding dest Exchange '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
+                channel.exchangeBind(targetName, exchangeName, routingKey);
             }
         }
     }

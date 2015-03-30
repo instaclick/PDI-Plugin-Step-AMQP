@@ -4,7 +4,6 @@ import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 import java.util.List;
-import java.util.ArrayList;
 
 public class AMQPPluginData extends BaseStepData implements StepDataInterface
 {

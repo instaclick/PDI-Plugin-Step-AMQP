@@ -44,14 +44,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 {
     private AMQPPluginMeta input;
 
-
     private CTabFolder wTabFolder;
     private FormData fdTabFolder;
 
     private CTabItem wConnectionTab, wDeclareTab, wConditionTab;
 
     private FormData fdConnectionComp, fdDeclareComp, fdConditionComp;
-  
+
 
     private Label labelURI;
     private TextVar textURI;
@@ -204,19 +203,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
     private final SelectionAdapter declareModifyListener = new SelectionAdapter() {
         @Override
-        public void widgetSelected(SelectionEvent e) {
-		if(checkDeclare.getSelection()) {
-	//		hideDeclareRealtedFields();
-		} else {
-	//		showDeclareRelatedFields();
-		}
-        }
+        public void widgetSelected(SelectionEvent e) {}
     };
 
     private final SelectionAdapter comboModeListener = new SelectionAdapter() {
         @Override
         public void widgetSelected(SelectionEvent e) {
-		setModeDependendFileds();
+        setModeDependendFileds();
         }
     };
 
@@ -255,21 +248,18 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         comboExchtype.setVisible(true);
         labelExchtype.setVisible(true);
 
-	labelWaitingConsumer.setVisible(false);
-	checkWaitingConsumer.setVisible(false);
+        labelWaitingConsumer.setVisible(false);
+        checkWaitingConsumer.setVisible(false);
 
-	labelRequeue.setVisible(false);
-	checkRequeue.setVisible(false);
+        labelRequeue.setVisible(false);
+        checkRequeue.setVisible(false);
 
         labelTarget.setText(getString("AmqpPlugin.Exchange.Label"));
 
-	tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ProducerMode"));
-	tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"));
+        tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ProducerMode"));
+        tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"));
 
-	//enable type for producer
-//	ColumnInfo targetTypeCI = tableBinding.getColumns()[1];
-//	targetTypeCI.setComboValues(target_types.toArray(new String[target_types.size()]));
-	tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"), ColumnInfo.COLUMN_TYPE_CCOMBO,target_types.toArray(new String[target_types.size()]), true));
+    tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"), ColumnInfo.COLUMN_TYPE_CCOMBO,target_types.toArray(new String[target_types.size()]), true));
     }
 
     private void enableConsumerFields()
@@ -285,18 +275,18 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         comboExchtype.setVisible(false);
         labelExchtype.setVisible(false);
 
-	labelWaitingConsumer.setVisible(true);
-	checkWaitingConsumer.setVisible(true);
+        labelWaitingConsumer.setVisible(true);
+        checkWaitingConsumer.setVisible(true);
 
-	labelRequeue.setVisible(true);
-	checkRequeue.setVisible(true);
+        labelRequeue.setVisible(true);
+        checkRequeue.setVisible(true);
 
         labelTarget.setText(getString("AmqpPlugin.Queue.Label"));
 
-	tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ConsumerMode"));
-	tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ConsumerMode"));
-	//disable type for consumer
-	tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ConsumerMode"), ColumnInfo.COLUMN_TYPE_NONE, true));
+        tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ConsumerMode"));
+        tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ConsumerMode"));
+        //disable type for consumer
+        tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ConsumerMode"), ColumnInfo.COLUMN_TYPE_NONE, true));
     }
 
     @Override
@@ -345,31 +335,27 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         wStepname.setLayoutData(fdStepname);
 
-
-
         wTabFolder = new CTabFolder( shell, SWT.BORDER );
         props.setLook( wTabFolder, Props.WIDGET_STYLE_TAB );
         wTabFolder.setSimple( false );
 
         ///////////////////////
-	// CONNECTION TAB
+        // CONNECTION TAB
         //
 
-	// ////////////////////////
-	// START OF Connection TAB///
-	// /
-	wConnectionTab = new CTabItem( wTabFolder, SWT.NONE );
-	wConnectionTab.setText( getString("AmqpPlugin.ConnectionTab.TabTitle" ) );
+        // ////////////////////////
+        // START OF Connection TAB///
+        // /
+        wConnectionTab = new CTabItem( wTabFolder, SWT.NONE );
+        wConnectionTab.setText( getString("AmqpPlugin.ConnectionTab.TabTitle" ) );
 
-	Composite wConnectionComp = new Composite( wTabFolder, SWT.NONE );
-	props.setLook( wConnectionComp );
+        Composite wConnectionComp = new Composite( wTabFolder, SWT.NONE );
+        props.setLook( wConnectionComp );
 
-	FormLayout connectionLayout = new FormLayout();
-	connectionLayout.marginWidth = 3;
-	connectionLayout.marginHeight = 3;
-	wConnectionComp.setLayout( connectionLayout );
-
-
+        FormLayout connectionLayout = new FormLayout();
+        connectionLayout.marginWidth = 3;
+        connectionLayout.marginHeight = 3;
+        wConnectionComp.setLayout( connectionLayout );
 
         // Mode
         labelMode = new Label(wConnectionComp, SWT.RIGHT);
@@ -637,35 +623,34 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textRouting.setLayoutData(formRoutingText);
 
 
-	fdConnectionComp = new FormData();
-	fdConnectionComp.left = new FormAttachment( 0, 0 );
-	fdConnectionComp.top = new FormAttachment( 0, 0 );
-	fdConnectionComp.right = new FormAttachment( 100, 0 );
-	fdConnectionComp.bottom = new FormAttachment( 100, 0 );
-	wConnectionComp.setLayoutData( fdConnectionComp );
+        fdConnectionComp = new FormData();
+        fdConnectionComp.left = new FormAttachment( 0, 0 );
+        fdConnectionComp.top = new FormAttachment( 0, 0 );
+        fdConnectionComp.right = new FormAttachment( 100, 0 );
+        fdConnectionComp.bottom = new FormAttachment( 100, 0 );
+        wConnectionComp.setLayoutData( fdConnectionComp );
 
-	wConnectionComp.layout();
-	wConnectionTab.setControl( wConnectionComp );
+        wConnectionComp.layout();
+        wConnectionTab.setControl( wConnectionComp );
 
         // ///////////////////////////////////////////////////////////
-    	// / END OF Connection TAB
+        // / END OF Connection TAB
         // ///////////////////////////////////////////////////////////
 
 
+        // ////////////////////////
+        // START OF Declare TAB///
+        // /
+        wDeclareTab = new CTabItem( wTabFolder, SWT.NONE );
+        wDeclareTab.setText( getString("AmqpPlugin.DeclareTab.TabTitle" ) );
 
-	// ////////////////////////
-	// START OF Declare TAB///
-	// /
-	wDeclareTab = new CTabItem( wTabFolder, SWT.NONE );
-	wDeclareTab.setText( getString("AmqpPlugin.DeclareTab.TabTitle" ) );
+        Composite wDeclareComp = new Composite( wTabFolder, SWT.NONE );
+        props.setLook( wDeclareComp );
 
-	Composite wDeclareComp = new Composite( wTabFolder, SWT.NONE );
-	props.setLook( wDeclareComp );
-
-	FormLayout declareLayout = new FormLayout();
-	declareLayout.marginWidth = 3;
-	declareLayout.marginHeight = 3;
-	wDeclareComp.setLayout( declareLayout );
+        FormLayout declareLayout = new FormLayout();
+        declareLayout.marginWidth = 3;
+        declareLayout.marginHeight = 3;
+        wDeclareComp.setLayout( declareLayout );
 
 
         // DecalreOption
@@ -789,13 +774,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         checkExclusive.setLayoutData(formExclusiveText);
 
-
-
-
         // Bindings
         labelBinding = new Label(wDeclareComp, SWT.NONE);
 
-        labelBinding.setText(getString("AmqpPlugin.Binding.Label")); 
+        labelBinding.setText(getString("AmqpPlugin.Binding.Label"));
         props.setLook(labelBinding);
 
         formBindingLabel      = new FormData();
@@ -829,34 +811,33 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         tableBinding.setLayoutData(formBindingText);
 
 
-	fdDeclareComp = new FormData();
-	fdDeclareComp.left = new FormAttachment( 0, 0 );
-	fdDeclareComp.top = new FormAttachment( 0, 0 );
-	fdDeclareComp.right = new FormAttachment( 100, 0 );
-	fdDeclareComp.bottom = new FormAttachment( 100, 0 );
-	wDeclareComp.setLayoutData( fdDeclareComp );
+        fdDeclareComp = new FormData();
+        fdDeclareComp.left = new FormAttachment( 0, 0 );
+        fdDeclareComp.top = new FormAttachment( 0, 0 );
+        fdDeclareComp.right = new FormAttachment( 100, 0 );
+        fdDeclareComp.bottom = new FormAttachment( 100, 0 );
+        wDeclareComp.setLayoutData( fdDeclareComp );
 
-	wDeclareComp.layout();
-	wDeclareTab.setControl( wDeclareComp );
+        wDeclareComp.layout();
+        wDeclareTab.setControl( wDeclareComp );
 
         // ///////////////////////////////////////////////////////////
-    	// / END OF Declare TAB
+        // / END OF Declare TAB
         // ///////////////////////////////////////////////////////////
 
 
-	// ////////////////////////
-	// START OF Condition TAB///
-	// /
-	wConditionTab = new CTabItem( wTabFolder, SWT.NONE );
-	wConditionTab.setText( getString("AmqpPlugin.ConditionTab.TabTitle" ) );
+        // ////////////////////////
+        // START OF Condition TAB///
+        wConditionTab = new CTabItem( wTabFolder, SWT.NONE );
+        wConditionTab.setText( getString("AmqpPlugin.ConditionTab.TabTitle" ) );
 
-	Composite wConditionComp = new Composite( wTabFolder, SWT.NONE );
-	props.setLook( wConditionComp );
+        Composite wConditionComp = new Composite( wTabFolder, SWT.NONE );
+        props.setLook( wConditionComp );
 
-	FormLayout conditionLayout = new FormLayout();
-	conditionLayout.marginWidth = 3;
-	conditionLayout.marginHeight = 3;
-	wConditionComp.setLayout( conditionLayout );
+        FormLayout conditionLayout = new FormLayout();
+        conditionLayout.marginWidth = 3;
+        conditionLayout.marginHeight = 3;
+        wConditionComp.setLayout( conditionLayout );
 
 
         // Transactional
@@ -882,13 +863,11 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         checkTransactional.setLayoutData(formTransactionalText);
 
-
-
         // Limit line
         labelLimit = new Label(wConditionComp, SWT.RIGHT);
         labelLimit.setText(getString("AmqpPlugin.Limit.Label"));
         props.setLook(labelLimit);
-                                                      
+
         formLimitLabel       = new FormData();
         formLimitLabel.left  = new FormAttachment(0, 0);
         formLimitLabel.right = new FormAttachment(middle, -margin);
@@ -908,10 +887,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textLimit.setLayoutData(formLimitText);
 
-        // PrefetchCount 
+        // PrefetchCount
         labelPrefetchCount = new Label(wConditionComp, SWT.RIGHT);
         labelPrefetchCount.setText(getString("AmqpPlugin.PrefetchCount.Label"));
-	labelPrefetchCount.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
+        labelPrefetchCount.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
         props.setLook(labelPrefetchCount);
 
         formPrefetchCountLabel       = new FormData();
@@ -937,7 +916,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         // WaitingConsumer
         labelWaitingConsumer = new Label(wConditionComp, SWT.RIGHT);
         labelWaitingConsumer.setText(getString("AmqpPlugin.WaitingConsumer.Label"));
-	labelWaitingConsumer.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
+        labelWaitingConsumer.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
         props.setLook(labelWaitingConsumer);
 
         formWaitingConsumerLabel       = new FormData();
@@ -962,7 +941,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         // WaitTimeout
         labelWaitTimeout = new Label(wConditionComp, SWT.RIGHT);
         labelWaitTimeout.setText(getString("AmqpPlugin.WaitTimeout.Label"));
-	labelWaitTimeout.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
+        labelWaitTimeout.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
         props.setLook(labelWaitTimeout);
 
         formWaitTimeoutLabel       = new FormData();
@@ -984,12 +963,10 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textWaitTimeout.setLayoutData(formWaitTimeoutText);
 
-
-
         // Requeue consumed data
         labelRequeue = new Label(wConditionComp, SWT.RIGHT);
         labelRequeue.setText(getString("AmqpPlugin.Requeue.Label"));
-	labelRequeue.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
+        labelRequeue.setForeground(new Color(shell.getDisplay(), 255, 0, 0));
         props.setLook(labelRequeue);
 
         formRequeueLabel       = new FormData();
@@ -1010,22 +987,19 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         checkRequeue.setLayoutData(formRequeueText);
 
+        fdConditionComp = new FormData();
+        fdConditionComp.left = new FormAttachment( 0, 0 );
+        fdConditionComp.top = new FormAttachment( 0, 0 );
+        fdConditionComp.right = new FormAttachment( 100, 0 );
+        fdConditionComp.bottom = new FormAttachment( 100, 0 );
+        wConditionComp.setLayoutData( fdConditionComp );
 
-	fdConditionComp = new FormData();
-	fdConditionComp.left = new FormAttachment( 0, 0 );
-	fdConditionComp.top = new FormAttachment( 0, 0 );
-	fdConditionComp.right = new FormAttachment( 100, 0 );
-	fdConditionComp.bottom = new FormAttachment( 100, 0 );
-	wConditionComp.setLayoutData( fdConditionComp );
-
-	wConditionComp.layout();
-	wConditionTab.setControl( wConditionComp );
+        wConditionComp.layout();
+        wConditionTab.setControl( wConditionComp );
 
         // ///////////////////////////////////////////////////////////
-    	// / END OF Condition TAB
+        // / END OF Condition TAB
         // ///////////////////////////////////////////////////////////
-
-
 
 
         /// place TabFolder element
@@ -1034,7 +1008,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         fdTabFolder.top = new FormAttachment( wStepname, margin );
         fdTabFolder.right = new FormAttachment( 100, 0 );
         fdTabFolder.bottom = new FormAttachment( 100, -50 );
-        wTabFolder.setLayoutData( fdTabFolder );	
+        wTabFolder.setLayoutData( fdTabFolder );
 
         // Some buttons
         wOK     = new Button(shell, SWT.PUSH);
@@ -1086,8 +1060,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         setSize();
         getData();
 
-	wTabFolder.setSelection( 0 );
-
+        wTabFolder.setSelection( 0 );
         input.setChanged(changed);
 
         shell.open();
@@ -1175,8 +1148,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         tableBinding.setRowNums();
         tableBinding.optWidth(true);
-
- 	setModeDependendFileds();
+        setModeDependendFileds();
 
         wStepname.selectAll();
     }
@@ -1239,15 +1211,15 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         int count = tableBinding.nrNonEmpty();
 
 
-	
-	if ( input.isConsumer() && input.isTransactional() && input.getPrefetchCount() > 0 ) {
-		MessageBox mb = new MessageBox( shell, SWT.OK | SWT.ICON_ERROR );
-		mb.setMessage( getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported" ) );
-		mb.setText( getString(  "AmqpPlugin.Error" ) );
-		mb.open();
-		textPrefetchCount.setFocus();
-		return;
-	}
+
+        if ( input.isConsumer() && input.isTransactional() && input.getPrefetchCount() > 0 ) {
+            MessageBox mb = new MessageBox( shell, SWT.OK | SWT.ICON_ERROR );
+            mb.setMessage( getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported" ) );
+            mb.setText( getString(  "AmqpPlugin.Error" ) );
+            mb.open();
+            textPrefetchCount.setFocus();
+            return;
+        }
 
         // nothing to save
         if (count <= 0) {
