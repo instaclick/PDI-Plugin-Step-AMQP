@@ -95,27 +95,27 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     Entry[] topEntries =
       new Entry[] {
         Entry.AMQP_MODE
-	, Entry.AMQP_URI
-	, Entry.AMQP_USESSL 
-	, Entry.AMQP_USERNAME
-	, Entry.AMQP_PASSWORD
-	, Entry.AMQP_HOST
-	, Entry.AMQP_PORT
-	, Entry.AMQP_VHOST
-	, Entry.BODY
-	, Entry.TARGET
-	, Entry.ROUTING
-	, Entry.LIMIT
-	, Entry.TRANSACTIONAL
-	, Entry.DURABLE
-	, Entry.AUTODEL
-	, Entry.REQUEUE
-	, Entry.EXCHTYPE
-	, Entry.EXCLUSIVE
-	, Entry.WAITINGCONSUMER
-	, Entry.WAITTIMEOUT
-	, Entry.PREFETCHCOUNT
-	, Entry.DECLARE
+    , Entry.AMQP_URI
+    , Entry.AMQP_USESSL 
+    , Entry.AMQP_USERNAME
+    , Entry.AMQP_PASSWORD
+    , Entry.AMQP_HOST
+    , Entry.AMQP_PORT
+    , Entry.AMQP_VHOST
+    , Entry.BODY
+    , Entry.TARGET
+    , Entry.ROUTING
+    , Entry.LIMIT
+    , Entry.TRANSACTIONAL
+    , Entry.DURABLE
+    , Entry.AUTODEL
+    , Entry.REQUEUE
+    , Entry.EXCHTYPE
+    , Entry.EXCLUSIVE
+    , Entry.WAITINGCONSUMER
+    , Entry.WAITTIMEOUT
+    , Entry.PREFETCHCOUNT
+    , Entry.DECLARE
     };
     for ( Entry topEntry : topEntries ) {
       all.add( new StepInjectionMetaEntry( topEntry.name(), topEntry.getValueType(), topEntry.getDescription() ) );
@@ -165,7 +165,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
 
               String bindingTarget = null;
               String bindingTargetType = null;
-	      String bindingRoutingKey = null;
+          String bindingRoutingKey = null;
 
               List<StepInjectionMetaEntry> entries = lookField.getDetails();
               for ( StepInjectionMetaEntry entry : entries ) {
