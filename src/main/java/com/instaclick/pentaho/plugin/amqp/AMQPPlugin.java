@@ -405,7 +405,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             factory.setUri(uri);
         } else {
             logMinimal(getString("AmqpPlugin.Username.Label") + " : " + username);
-            logMinimal(getString("AmqpPlugin.Password.Label") + " : " + password);
+            logDebug(getString("AmqpPlugin.Password.Label") + " : " + password);
             logMinimal(getString("AmqpPlugin.Host.Label")     + " : " + host);
             logMinimal(getString("AmqpPlugin.Port.Label")     + " : " + port);
             logMinimal(getString("AmqpPlugin.Vhost.Label")    + " : " + vhost);
