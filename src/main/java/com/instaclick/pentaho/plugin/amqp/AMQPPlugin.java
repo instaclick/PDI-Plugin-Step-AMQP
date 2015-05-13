@@ -281,7 +281,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
     private void closeAmqp()
     {
-        if (channel != null) {
+        if ( channel != null && channel.isOpen() ) {
 
             if (data.isProducer && data.isTransactional && data.isTxOpen) {
                 try {
@@ -294,7 +294,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
                 }
             }
 
-            try {
+            try 
+            {
                 logMinimal("Closing AMQP channel");
                 channel.close();
             } catch (IOException ex) {
@@ -302,7 +303,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             }
         }
 
-        if (conn != null) {
+        if ( conn != null && conn.isOpen() ) {
             try {
                 logMinimal("Closing AMQP connection");
                 conn.close();

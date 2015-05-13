@@ -1,3 +1,6 @@
+2.1.3
+* add check for channel isOpen and connection is Open on close events
+
 2.1.2
 * add support for MetaData Injector Plugin
 
