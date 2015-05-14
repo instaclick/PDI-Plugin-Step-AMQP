@@ -254,16 +254,19 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     {
         logMinimal("Flush invoked");
 
-        if (data.isConsumer && data.isTransactional && ! data.isRequeue) {
+        if (data.isConsumer && data.isTransactional && ! data.isRequeue && channel.isOpen() ) {
             try {
                 logMinimal("Ack messages : " + data.amqpTag);
                 channel.basicAck(data.amqpTag, true);
             } catch (IOException ex) {
                 logError(ex.getMessage());
+            } catch (com.rabbitmq.client.AlreadyClosedException ex ) {
+                logError(ex.getMessage());
             }
         }
 
-        if (data.isProducer && data.isTransactional && data.isTxOpen) {
+
+        if (data.isProducer && data.isTransactional && data.isTxOpen && channel.isOpen() ) {
             try {
 
                 logMinimal("Commit channel transaction");
