@@ -1,9 +1,10 @@
 2.2.1
 * add Confirmation Tab
-* add Confirmation row listeners. Listen input of ACK , REQUQUE and REJECT steps for deliverytags and Ack, Requque or reject them accordingly
+* add Confirmation row listeners. Listen input of ACK and REJECT steps for deliverytags and Ack, Reject them accordingly
   As no hop (stream) can be created (will made data loop) from those Listeners to Consumer step, you have to configure names of those steps on Consumer along with DeliveryTagFields.
   Using variables for DeliveryTagField you can specify it once
-* name of deliveryTag fields from consumer and on ACK , REQUQUE and REJECT steps can be different
+* name of deliveryTag fields from consumer and on ACK and REJECT steps can be different
+* non Ack or Rejected messages will be treated as not read
 * fixed error when body field and routing key specified with variables can form incorrect stream ( no expansion were performed )
 
 2.1.3

@@ -239,15 +239,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
         case REJECTSTEPDELIVERYTAG:
           meta.setRejectStepDeliveryTagField( lookValue );
           break;
-        case REQUEUESTEPNAME:
-          meta.setRequeueStepName( lookValue );
-          break;
-        case REQUEUESTEPDELIVERYTAG:
-          meta.setRequeueStepDeliveryTagField( lookValue );
-          break;
-
-
-
+ 
         case TARGET:
           meta.setTarget( lookValue );
           break;
@@ -362,8 +354,6 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     list.add( StepInjectionUtil.getEntry( Entry.ACKSTEPDELIVERYTAG, meta.getAckStepDeliveryTagField() ) );
     list.add( StepInjectionUtil.getEntry( Entry.REJECTSTEPNAME, meta.getRejectStepName() ) );
     list.add( StepInjectionUtil.getEntry( Entry.REJECTSTEPDELIVERYTAG, meta.getRejectStepDeliveryTagField() ) );
-    list.add( StepInjectionUtil.getEntry( Entry.REQUEUESTEPNAME, meta.getRequeueStepName() ) );
-    list.add( StepInjectionUtil.getEntry( Entry.REQUEUESTEPDELIVERYTAG, meta.getRequeueStepDeliveryTagField() ) );
 
     StepInjectionMetaEntry fieldsEntry = StepInjectionUtil.getEntry( Entry.BINDINGS );
     list.add( fieldsEntry );

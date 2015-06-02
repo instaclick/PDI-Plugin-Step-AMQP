@@ -70,8 +70,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_ACKDELIVERYTAG_FIELD = "ack_deliverytag_field";
     private static final String FIELD_REJECTSTEPNAME = "reject_stepname";
     private static final String FIELD_REJECTSTEPDELIVERYTAG_FIELD = "reject_deliverytag_field";
-    private static final String FIELD_REQUEUESTEPNAME = "requeue_stepname";
-    private static final String FIELD_REQUEUESTEPDELIVERYTAG_FIELD = "requeue_deliverytag_field";
 
     private static final String DEFAULT_BODY_FIELD = "message";
     private static final String DEFAULT_DELIVERYTAG_FIELD = "amqpdeliverytag";
@@ -107,8 +105,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     public String ackStepDeliveryTagField = null;
     public String rejectStepName = null;
     public String rejectStepDeliveryTagField = null;
-    public String requeueStepName = null;
-    public String requeueStepDeliveryTagField = null;
 
     private String mode             = AMQPPluginData.MODE_CONSUMER;
 
@@ -252,8 +248,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_ACKDELIVERYTAG_FIELD, getAckStepDeliveryTagField()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REJECTSTEPNAME, getRejectStepName()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REJECTSTEPDELIVERYTAG_FIELD, getRejectStepDeliveryTagField()));
-        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REQUEUESTEPNAME, getRequeueStepName()));
-        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REQUEUESTEPDELIVERYTAG_FIELD, getRequeueStepDeliveryTagField()));
 
         return bufer.toString();
     }
@@ -305,8 +299,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setAckStepDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_ACKDELIVERYTAG_FIELD));
             setRejectStepName(XMLHandler.getTagValue(stepnode, FIELD_REJECTSTEPNAME));
             setRejectStepDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_REJECTSTEPDELIVERYTAG_FIELD));
-            setRequeueStepName(XMLHandler.getTagValue(stepnode, FIELD_REQUEUESTEPNAME));
-            setRequeueStepDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_REQUEUESTEPDELIVERYTAG_FIELD));
 
 
         } catch (Exception e) {
@@ -358,8 +350,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             setAckStepDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_ACKDELIVERYTAG_FIELD));
             setRejectStepName(rep.getStepAttributeString(idStep, FIELD_REJECTSTEPNAME));
             setRejectStepDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_REJECTSTEPDELIVERYTAG_FIELD));
-            setRequeueStepName(rep.getStepAttributeString(idStep, FIELD_REQUEUESTEPNAME));
-            setRequeueStepDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_REQUEUESTEPDELIVERYTAG_FIELD));
 
 
         } catch (KettleDatabaseException dbe) {
@@ -411,8 +401,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
             rep.saveStepAttribute(idTransformation, idStep, FIELD_ACKDELIVERYTAG_FIELD, getAckStepDeliveryTagField());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_REJECTSTEPNAME, getRejectStepName());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_REJECTSTEPDELIVERYTAG_FIELD, getRejectStepDeliveryTagField());
-            rep.saveStepAttribute(idTransformation, idStep, FIELD_REQUEUESTEPNAME, getRequeueStepName());
-            rep.saveStepAttribute(idTransformation, idStep, FIELD_REQUEUESTEPDELIVERYTAG_FIELD, getRequeueStepDeliveryTagField());
 
 
         } catch (KettleDatabaseException dbe) {
@@ -447,8 +435,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.ackStepDeliveryTagField = "";
         this.rejectStepName = "";
         this.rejectStepDeliveryTagField = "";
-        this.requeueStepName = "";
-        this.requeueStepDeliveryTagField = "";
 
         bindings.clear();
     }
@@ -762,26 +748,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     public void setRejectStepDeliveryTagField(String val)
     {
         this.rejectStepDeliveryTagField = val;
-    }
-
-    public String getRequeueStepName()
-    {
-        return requeueStepName;
-    }
-
-    public void setRequeueStepName(String val)
-    {
-        this.requeueStepName = val;
-    }
-
-    public String getRequeueStepDeliveryTagField()
-    {
-        return requeueStepDeliveryTagField;
-    }
-
-    public void setRequeueStepDeliveryTagField(String val)
-    {
-        this.requeueStepDeliveryTagField = val;
     }
 
 

@@ -27,7 +27,6 @@ public class ConfirmationRowStepWatcher implements RowListener {
       private String deliveryTagName = null;
       private AMQPConfirmation   ackDelegate;
       private AMQPConfirmation   rejectDelegate;
-      private AMQPConfirmation   requeueDelegate;
 
       public ConfirmationRowStepWatcher(String deliveryTagName) {
         this.deliveryTagName = deliveryTagName;
@@ -49,9 +48,6 @@ public class ConfirmationRowStepWatcher implements RowListener {
              if ( rejectDelegate != null ) rejectDelegate.rejectDelivery(deliveryTag);
             }
 
-            synchronized (this) {
-             if ( requeueDelegate != null ) requeueDelegate.requeueDelivery(deliveryTag);
-            }
 
         } catch (KettleValueException e) { 
             throw new KettleStepException(e);
@@ -82,11 +78,6 @@ public class ConfirmationRowStepWatcher implements RowListener {
         rejectDelegate = deleg;
       }
 
-      public void setRequeueDelegate(AMQPConfirmation deleg) throws AMQPException
-      { 
-        if (requeueDelegate != null ) throw new AMQPException("Already set Requeue Delegate.");
-        requeueDelegate = deleg;
-      }
 
 
 }

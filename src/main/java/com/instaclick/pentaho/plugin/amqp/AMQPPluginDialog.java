@@ -47,9 +47,9 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private CTabFolder wTabFolder;
     private FormData fdTabFolder;
 
-    private CTabItem wConnectionTab, wDeclareTab, wConditionTab;
+    private CTabItem wConnectionTab, wDeclareTab, wConditionTab, wConfirmationTab;
 
-    private FormData fdConnectionComp, fdDeclareComp, fdConditionComp;
+    private FormData fdConnectionComp, fdDeclareComp, fdConditionComp, fdConfirmationComp;
 
 
     private Label labelURI;
@@ -176,6 +176,30 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData     formBindingLabel;
     private FormData     formBindingText;
 
+    
+    
+    private Label labelAckStepName;
+    private TextVar textAckStepName;
+    private FormData formAckStepNameLabel;
+    private FormData formAckStepNameText;
+
+    private Label labelAckStepDeliveryTagField;
+    private TextVar textAckStepDeliveryTagField;
+    private FormData formAckStepDeliveryTagLabel;
+    private FormData formAckStepDeliveryTagText;
+
+    private Label labelRejectStepName;
+    private TextVar textRejectStepName;
+    private FormData formRejectStepNameLabel;
+    private FormData formRejectStepNameText;
+
+    private Label labelRejectStepDeliveryTagField;
+    private TextVar textRejectStepDeliveryTagField;
+    private FormData formRejectStepDeliveryTagLabel;
+    private FormData formRejectStepDeliveryTagText;
+
+    
+    
     private static final List<String> modes = new ArrayList<String>(Arrays.asList(new String[] {
         AMQPPluginData.MODE_CONSUMER,
         AMQPPluginData.MODE_PRODUCER
@@ -580,6 +604,31 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textBodyField.setLayoutData(formBodyText);
 
+        // DeliveryTag
+       labelDeliveryTagField = new Label(wConnectionComp, SWT.RIGHT);
+       labelDeliveryTagField.setText(getString("AmqpPlugin.DeliveryTag.Label"));
+       props.setLook(labelDeliveryTagField);
+
+       formDeliveryTagLabel       = new FormData();
+       formDeliveryTagLabel.left  = new FormAttachment(0, 0);
+       formDeliveryTagLabel.right = new FormAttachment(middle, -margin);
+       formDeliveryTagLabel.top   = new FormAttachment(textBodyField , margin);
+
+       labelDeliveryTagField.setLayoutData(formDeliveryTagLabel);
+
+       textDeliveryTagField = new TextVar(transMeta, wConnectionComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+       props.setLook(textDeliveryTagField);
+       textDeliveryTagField.addModifyListener(modifyListener);
+
+       formDeliveryTagText        = new FormData();
+       formDeliveryTagText.left   = new FormAttachment(middle, 0);
+       formDeliveryTagText.right  = new FormAttachment(100, 0);
+       formDeliveryTagText.top    = new FormAttachment(textBodyField, margin);
+
+       textDeliveryTagField.setLayoutData(formDeliveryTagText);
+
+        
         // Target line
         labelTarget = new Label(wConnectionComp, SWT.RIGHT);
         labelTarget.setText(getString("AmqpPlugin.Target.Label"));
@@ -588,7 +637,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formTargetLabel       = new FormData();
         formTargetLabel.left  = new FormAttachment(0, 0);
         formTargetLabel.right = new FormAttachment(middle, -margin);
-        formTargetLabel.top   = new FormAttachment(textBodyField , margin);
+        formTargetLabel.top   = new FormAttachment(textDeliveryTagField , margin);
 
         labelTarget.setLayoutData(formTargetLabel);
 
@@ -600,7 +649,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formTargetText        = new FormData();
         formTargetText.left   = new FormAttachment(middle, 0);
         formTargetText.right  = new FormAttachment(100, 0);
-        formTargetText.top    = new FormAttachment(textBodyField, margin);
+        formTargetText.top    = new FormAttachment(textDeliveryTagField, margin);
 
         textTarget.setLayoutData(formTargetText);
 
@@ -1007,6 +1056,133 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         // / END OF Condition TAB
         // ///////////////////////////////////////////////////////////
 
+        
+        // ////////////////////////
+        // START OF Confirmation TAB///
+        wConfirmationTab = new CTabItem( wTabFolder, SWT.NONE );
+        wConfirmationTab.setText( getString("AmqpPlugin.ConfirmationTab.TabTitle" ) );
+
+        Composite wConfirmationComp = new Composite( wTabFolder, SWT.NONE );
+        props.setLook( wConfirmationComp );
+
+        FormLayout confirmationLayout = new FormLayout();
+        confirmationLayout.marginWidth = 3;
+        confirmationLayout.marginHeight = 3;
+        wConfirmationComp.setLayout( confirmationLayout );
+
+        
+
+        // AckStepName
+        labelAckStepName = new Label(wConfirmationComp, SWT.RIGHT);
+        labelAckStepName.setText(getString("AmqpPlugin.AckStepName.Label"));
+        props.setLook(labelAckStepName);
+
+        formAckStepNameLabel       = new FormData();
+        formAckStepNameLabel.left  = new FormAttachment(0, 0);
+        formAckStepNameLabel.right = new FormAttachment(middle, -margin);
+        formAckStepNameLabel.top   = new FormAttachment(0 , margin);
+
+        labelAckStepName.setLayoutData(formAckStepNameLabel);
+
+        textAckStepName = new TextVar(transMeta, wConfirmationComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textAckStepName);
+        textAckStepName.addModifyListener(modifyListener);
+
+        formAckStepNameText        = new FormData();
+        formAckStepNameText.left   = new FormAttachment(middle, 0);
+        formAckStepNameText.right  = new FormAttachment(100, 0);
+        formAckStepNameText.top    = new FormAttachment(0, margin);
+
+        textAckStepName.setLayoutData(formAckStepNameText);
+
+        // AckStepDeliveryTag
+        labelAckStepDeliveryTagField = new Label(wConfirmationComp, SWT.RIGHT);
+        labelAckStepDeliveryTagField.setText(getString("AmqpPlugin.AckStepDeliveryTag.Label"));
+        props.setLook(labelAckStepDeliveryTagField);
+
+        formAckStepDeliveryTagLabel       = new FormData();
+        formAckStepDeliveryTagLabel.left  = new FormAttachment(0, 0);
+        formAckStepDeliveryTagLabel.right = new FormAttachment(middle, -margin);
+        formAckStepDeliveryTagLabel.top   = new FormAttachment(textAckStepName , margin);
+
+        labelAckStepDeliveryTagField.setLayoutData(formAckStepDeliveryTagLabel);
+
+        textAckStepDeliveryTagField = new TextVar(transMeta, wConfirmationComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textAckStepDeliveryTagField);
+        textAckStepDeliveryTagField.addModifyListener(modifyListener);
+
+        formAckStepDeliveryTagText        = new FormData();
+        formAckStepDeliveryTagText.left   = new FormAttachment(middle, 0);
+        formAckStepDeliveryTagText.right  = new FormAttachment(100, 0);
+        formAckStepDeliveryTagText.top    = new FormAttachment(textAckStepName, margin);
+
+        textAckStepDeliveryTagField.setLayoutData(formAckStepDeliveryTagText);
+
+        // RejectStepName
+        labelRejectStepName = new Label(wConfirmationComp, SWT.RIGHT);
+        labelRejectStepName.setText(getString("AmqpPlugin.RejectStepName.Label"));
+        props.setLook(labelRejectStepName);
+
+        formRejectStepNameLabel       = new FormData();
+        formRejectStepNameLabel.left  = new FormAttachment(0, 0);
+        formRejectStepNameLabel.right = new FormAttachment(middle, -margin);
+        formRejectStepNameLabel.top   = new FormAttachment(textAckStepDeliveryTagField , margin);
+
+        labelRejectStepName.setLayoutData(formRejectStepNameLabel);
+
+        textRejectStepName = new TextVar(transMeta, wConfirmationComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textRejectStepName);
+        textRejectStepName.addModifyListener(modifyListener);
+
+        formRejectStepNameText        = new FormData();
+        formRejectStepNameText.left   = new FormAttachment(middle, 0);
+        formRejectStepNameText.right  = new FormAttachment(100, 0);
+        formRejectStepNameText.top    = new FormAttachment(textAckStepDeliveryTagField, margin);
+
+        textRejectStepName.setLayoutData(formRejectStepNameText);
+
+        // RejectStepDeliveryTag
+        labelRejectStepDeliveryTagField = new Label(wConfirmationComp, SWT.RIGHT);
+        labelRejectStepDeliveryTagField.setText(getString("AmqpPlugin.RejectStepDeliveryTag.Label"));
+        props.setLook(labelRejectStepDeliveryTagField);
+
+        formRejectStepDeliveryTagLabel       = new FormData();
+        formRejectStepDeliveryTagLabel.left  = new FormAttachment(0, 0);
+        formRejectStepDeliveryTagLabel.right = new FormAttachment(middle, -margin);
+        formRejectStepDeliveryTagLabel.top   = new FormAttachment(textRejectStepName , margin);
+
+        labelRejectStepDeliveryTagField.setLayoutData(formRejectStepDeliveryTagLabel);
+
+        textRejectStepDeliveryTagField = new TextVar(transMeta, wConfirmationComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textRejectStepDeliveryTagField);
+        textRejectStepDeliveryTagField.addModifyListener(modifyListener);
+
+        formRejectStepDeliveryTagText        = new FormData();
+        formRejectStepDeliveryTagText.left   = new FormAttachment(middle, 0);
+        formRejectStepDeliveryTagText.right  = new FormAttachment(100, 0);
+        formRejectStepDeliveryTagText.top    = new FormAttachment(textRejectStepName, margin);
+
+        textRejectStepDeliveryTagField.setLayoutData(formRejectStepDeliveryTagText);
+
+
+        fdConfirmationComp = new FormData();
+        fdConfirmationComp.left = new FormAttachment( 0, 0 );
+        fdConfirmationComp.top = new FormAttachment( 0, 0 );
+        fdConfirmationComp.right = new FormAttachment( 100, 0 );
+        fdConfirmationComp.bottom = new FormAttachment( 100, 0 );
+        wConfirmationComp.setLayoutData( fdConfirmationComp );
+
+        wConfirmationComp.layout();
+        wConfirmationTab.setControl( wConfirmationComp );
+
+        // ///////////////////////////////////////////////////////////
+        // / END OF Confirmation TAB
+        // ///////////////////////////////////////////////////////////
+
 
         /// place TabFolder element
         fdTabFolder = new FormData();
@@ -1127,6 +1303,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         setFieldText(textUsername, input.getUsername());
         setFieldText(textPassword, input.getPassword());
         setFieldText(textBodyField, input.getBodyField());
+        setFieldText(textDeliveryTagField, input.getDeliveryTagField());
+
+        setFieldText(textAckStepName, input.getAckStepName());
+        setFieldText(textAckStepDeliveryTagField, input.getAckStepDeliveryTagField());
+        setFieldText(textRejectStepName, input.getRejectStepName());
+        setFieldText(textRejectStepDeliveryTagField, input.getRejectStepDeliveryTagField());
 
         setFieldText(textPrefetchCount, input.getPrefetchCountString());
         setFieldText(textWaitTimeout, input.getWaitTimeoutString());
@@ -1174,6 +1356,8 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setUri(getFieldText(textURI));
         input.setTarget(getFieldText(textTarget));
         input.setBodyField(getFieldText(textBodyField));
+        input.setDeliveryTagField(getFieldText(textDeliveryTagField));
+        
         input.setUsername(getFieldText(textUsername));
         input.setPassword(getFieldText(textPassword));
         input.setHost(getFieldText(textHost));
@@ -1193,6 +1377,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setRequeue(checkRequeue.getSelection());
         input.setAutodel(checkAutodel.getSelection());
 
+        
+        input.setAckStepName(getFieldText(textAckStepName));
+        input.setAckStepDeliveryTagField(getFieldText(textAckStepDeliveryTagField));
+        input.setRejectStepName(getFieldText(textRejectStepName));
+        input.setRejectStepDeliveryTagField(getFieldText(textRejectStepDeliveryTagField));
+
+        
         input.setMode(getFieldText(comboMode));
         input.setExchtype(getFieldText(comboExchtype));
         input.clearBindings();

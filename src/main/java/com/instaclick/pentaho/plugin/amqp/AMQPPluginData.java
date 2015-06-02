@@ -4,6 +4,7 @@ import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 import java.util.List;
+import java.util.ArrayList;
 
 public class AMQPPluginData extends BaseStepData implements StepDataInterface
 {
@@ -43,17 +44,20 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public int prefetchCount=0;
     public long count = 0;
 
+
+
     // Delayed confirmation realted
     public Integer deliveryTagIndex = null;
 
+    public boolean activeConfirmation = false;
     public String ackStepName = null;
     public String ackStepDeliveryTagField = null;
 
     public String rejectStepName = null;
     public String rejectStepDeliveryTagField = null;
-    
-    public String requeueStepName = null;
-    public String requeueStepDeliveryTagField = null;
+
+    public List<Long> ackMsgInTransaction = null;
+    public List<Long> rejectedMsgInTransaction = null;
 
 
     public AMQPPluginData()
