@@ -5,6 +5,8 @@ import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 import java.util.List;
 import java.util.ArrayList;
+import org.pentaho.di.trans.step.StepInterface;
+
 
 public class AMQPPluginData extends BaseStepData implements StepDataInterface
 {
@@ -59,6 +61,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public List<Long> ackMsgInTransaction = null;
     public List<Long> rejectedMsgInTransaction = null;
 
+    public ArrayList<StepInterface> watchedConfirmStep = null;
 
     public AMQPPluginData()
     {

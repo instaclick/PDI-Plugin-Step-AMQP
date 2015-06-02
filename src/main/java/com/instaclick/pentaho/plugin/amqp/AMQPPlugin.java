@@ -18,6 +18,7 @@ import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStep;
 import org.pentaho.di.trans.step.StepDataInterface;
 import org.pentaho.di.trans.step.StepInterface;
+import org.pentaho.di.trans.step.StepListener;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
@@ -32,6 +33,7 @@ import org.pentaho.di.trans.step.RowListener;
 import org.pentaho.di.core.exception.KettleValueException;
 
 public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmation
+
 {
     private AMQPPluginData data;
     private AMQPPluginMeta meta;
@@ -40,6 +42,23 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
     private QueueingConsumer consumer = null;
     private Connection conn = null;
     private Channel channel = null;
+
+    private final StepListener confirmStepListener = new StepListener()
+    {
+        @Override
+        public void stepActive( Trans trans, StepMeta stepMeta, StepInterface step )
+        {
+        }
+        
+        @Override
+        public void stepFinished( Trans trans, StepMeta stepMeta, StepInterface step )
+        {
+            synchronized(this) {
+                data.watchedConfirmStep.remove(step);
+            };
+            logDebug("DETECT FINISHED STEP : " + step.getStepMeta().getName() + ". need wait for steps yet : " + data.watchedConfirmStep.size());
+        }
+    };
 
     private final TransListener transListener = new TransListener()
     {
@@ -81,8 +100,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
     {
         if (data.isConsumer) {
             if (!data.isTransactional) {
+                logBasic("IMMIDIATE ACK MESSAGE   " + deliveryTag);
                 channel.basicAck(deliveryTag, false);
             }  else {
+                logBasic("POSTPONED ACK MESSAGE   " + deliveryTag);
                 data.ackMsgInTransaction.add(deliveryTag);
             }
         }
@@ -97,8 +118,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
         if (data.isConsumer) {
             if (!data.isTransactional) {
+                logBasic("IMMIDIATE REJECT MESSAGE   " + deliveryTag);
                 channel.basicNack(deliveryTag, false, false);
             }  else {
+                logBasic("POSTPONED REJECT MESSAGE   " + deliveryTag);
                 data.rejectedMsgInTransaction.add(deliveryTag);
             }
         }
@@ -138,6 +161,14 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 consume();
 
                 setOutputDone();
+
+                //now output rowset closed, so we can wait for our confirmation steps
+                if ( data.activeConfirmation )  {
+                    while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
+                        Thread.sleep(500);
+                        logDebug("Wait for steps used in CONFIRMATION");
+                    }                
+                }
 
                 return false;
             } catch (IOException e) {
@@ -294,17 +325,18 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
     {
         logMinimal("Flush invoked");
 
-        if (data.isConsumer && data.isTransactional && ! data.isRequeue && channel.isOpen() ) {
-
+        if (data.isConsumer  && ! data.isRequeue && channel.isOpen() ) {
             try {
-                if (data.activeConfirmation)  { 
+                if ( data.activeConfirmation && data.isTransactional )  { 
                     //ack all good
                     logMinimal("Ack All Good messages, total count  : " + data.ackMsgInTransaction.size());
                     for (Long ampqTag : data.ackMsgInTransaction )  channel.basicAck(ampqTag, false);
                     //reject all with errors
                     logMinimal("Ack All Bad messages, total count  : " + data.rejectedMsgInTransaction.size());
                     for (Long ampqTag : data.rejectedMsgInTransaction )  channel.basicNack(ampqTag, false, false);
-                } else {
+                } 
+
+                if ( !data.activeConfirmation && data.isTransactional )  {
                     logMinimal("Ack All messages : " + data.amqpTag);
                     channel.basicAck(data.amqpTag, true);
                 }
@@ -545,6 +577,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             if ( ! Const.isEmpty(data.ackStepName) || ! Const.isEmpty(data.rejectStepName) )            {
                 // we start active confirmation , need not to Ack messages in batches
                 data.activeConfirmation = true;
+                data.watchedConfirmStep = new ArrayList<StepInterface>();
             }
 
             //bind to step with acknowledge rows on input stream
@@ -559,6 +592,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.ackStepDeliveryTagField);
                 rsw.setAckDelegate(this);
             	si.addRowListener(rsw);
+
+                si.addStepListener(confirmStepListener);
+                data.watchedConfirmStep.add(si);
+
                 if (data.isTransactional)  data.ackMsgInTransaction = new ArrayList<Long>();
             }
 
@@ -574,6 +611,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.rejectStepDeliveryTagField);
                 rsw.setRejectDelegate(this);
             	si.addRowListener(rsw);
+
+                si.addStepListener(confirmStepListener);
+                data.watchedConfirmStep.add(si);
+
                 if (data.isTransactional)  data.rejectedMsgInTransaction = new ArrayList<Long>();
             }
 
