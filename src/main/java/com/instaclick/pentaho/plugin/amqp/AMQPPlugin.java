@@ -162,14 +162,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
                 setOutputDone();
 
-                //now output rowset closed, so we can wait for our confirmation steps
-                if ( data.activeConfirmation )  {
-                    while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
-                        Thread.sleep(500);
-                        logDebug("Wait for steps used in CONFIRMATION");
-                    }                
-                }
-
                 return false;
             } catch (IOException e) {
                 throw new AMQPException(e.getMessage(), e);
@@ -321,12 +313,22 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         } while ( !isStopped());
     }
 
-    private void flush()
+    private void flush() 
     {
         logMinimal("Flush invoked");
 
         if (data.isConsumer  && ! data.isRequeue && channel.isOpen() ) {
             try {
+
+                //wait for our confirmation steps finished
+                if ( data.activeConfirmation )  {
+                    while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
+                        Thread.sleep(500);
+                        logDebug("Wait for steps used in CONFIRMATION");
+                    }                
+                }
+
+
                 if ( data.activeConfirmation && data.isTransactional )  { 
                     //ack all good
                     logMinimal("Ack All Good messages, total count  : " + data.ackMsgInTransaction.size());
@@ -344,6 +346,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             } catch (IOException ex) {
                 logError(ex.getMessage());
             } catch (com.rabbitmq.client.AlreadyClosedException ex ) {
+                logError(ex.getMessage());
+            } catch (InterruptedException ex ) {
                 logError(ex.getMessage());
             }
         }
