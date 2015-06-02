@@ -36,6 +36,7 @@ PDI Step Configuration
 | Vhost                 | VirtualHost , can be specified with variables                                 |
 | UseSsl                | to use ssl or not                                                             |
 | Body                  | Field that will be used as message body                                       |
+| Delivery Tag          | Carry amqpDeliveryTag, used for confirmation                                  |
 | Exchange/Queue name   | The exchange name for producers or queue name for consumers                   |
 | Routing key           | Field that store the routing key                                              |
 | Limit                 | Max number of message reads when using as consumer                            |
@@ -48,6 +49,15 @@ PDI Step Configuration
 | Wait Timeout          | Consumer waiting for messages mode, waiting tiemout, 0 for no timeout         |
 | PrefetchCount         | Consumer mode, basicQos parameter                                             |
 | Requeue               | For consumer. after receiving messages, Nack them with requeue flag           |
+
+STEP Confirmation steps ralted
+--------------------------------
+| Property                            | Description                                                                                                                        |
+| ------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------:|
+| Ack Msg Step name                   | Name of step which input row will be monitored and each deliveryTag value will be used to Confirm messages received                |
+| Ack Msg Step DeliveryTag Field      | Name of field carry delivery tag value in input stream of AckMsg Step                                                              |
+| Rejected Msg Step Name              | Name of step which input row will be monitored and each deliveryTag value will be used to Reject ( dead-letter ) messages received |
+| Rejected Msg Step DeliveryTag Field | Name of field carry delivery tag value in input stream of Rejected Msg Step                                                        |
 
 
 Limitations
