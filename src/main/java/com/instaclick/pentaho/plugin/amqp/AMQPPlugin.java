@@ -162,14 +162,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
                 setOutputDone();
 
-                //now output rowset closed, so we can wait for our confirmation steps
-                if ( data.activeConfirmation )  {
-                    while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
-                        Thread.sleep(500);
-                        logDebug("Wait for steps used in CONFIRMATION");
-                    }                
-                }
-
                 return false;
             } catch (IOException e) {
                 throw new AMQPException(e.getMessage(), e);
