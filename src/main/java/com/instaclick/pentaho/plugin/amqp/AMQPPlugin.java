@@ -8,6 +8,7 @@ import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.QueueingConsumer;
 import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
+import org.pentaho.di.core.RowSet;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowMetaInterface;
@@ -24,8 +25,12 @@ import org.pentaho.di.core.Const;
 import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;
 import org.pentaho.di.trans.TransListener;
+import org.pentaho.di.core.RowMetaAndData;
+import org.pentaho.di.core.row.RowMetaInterface;
+import org.pentaho.di.trans.step.RowListener;
+import org.pentaho.di.core.exception.KettleValueException;
 
-public class AMQPPlugin extends BaseStep implements StepInterface
+public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmation
 {
     private AMQPPluginData data;
     private AMQPPluginMeta meta;
@@ -66,6 +71,37 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             flush();
         }
     };
+
+    //implement delivery confrimation
+    @Override
+    public void ackDelivery(long deliveryTag) throws IOException
+    {
+        if (data.isConsumer) {
+            channel.basicAck(deliveryTag, false);
+        }
+    }
+
+    @Override
+    public void rejectDelivery(long deliveryTag) throws IOException
+    {
+
+        if (data.isConsumer) {
+            channel.basicNack(deliveryTag, false, false);
+        }
+
+    }
+
+    @Override
+    public void requeueDelivery(long deliveryTag) throws IOException
+    {
+
+        if (data.isConsumer) {
+            channel.basicNack(deliveryTag, false, true);
+        }
+
+    }
+
+
 
     public AMQPPlugin(StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta, Trans trans)
     {
@@ -228,6 +264,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
             row[data.bodyFieldIndex] = data.body;
             row[data.routingIndex]   = data.routing;
+            row[data.deliveryTagIndex] = data.amqpTag;
 
             // put the row to the output row stream
             putRow(data.outputRowMeta, row);
@@ -255,6 +292,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         logMinimal("Flush invoked");
 
         if (data.isConsumer && data.isTransactional && ! data.isRequeue && channel.isOpen() ) {
+
             try {
                 logMinimal("Ack messages : " + data.amqpTag);
                 channel.basicAck(data.amqpTag, true);
@@ -342,11 +380,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         Integer port    = null;
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
+        String deliveryTagField = environmentSubstitute(meta.getDeliveryTagField());
         String uri      = environmentSubstitute(meta.getUri());
         String host     = environmentSubstitute(meta.getHost());
         String vhost    = environmentSubstitute(meta.getVhost());
         String username = environmentSubstitute(meta.getUsername());
         String password = decryptPasswordOptionallyEncrypted(environmentSubstitute(meta.getPassword()));
+
 
         if ( ! Const.isEmpty(meta.getPort())) {
             port = Integer.parseInt(environmentSubstitute(meta.getPort()));
@@ -374,6 +414,18 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.isConsumer        = meta.isConsumer();
         data.isProducer        = meta.isProducer();
 
+        //Confirmation sniffers
+
+        data.ackStepName = environmentSubstitute(meta.getAckStepName());
+        data.ackStepDeliveryTagField = environmentSubstitute(meta.getAckStepDeliveryTagField());
+
+        data.rejectStepName = environmentSubstitute(meta.getRejectStepName());
+        data.rejectStepDeliveryTagField = environmentSubstitute(meta.getRejectStepDeliveryTagField());
+    
+        data.requeueStepName = environmentSubstitute(meta.getRequeueStepName());
+        data.requeueStepDeliveryTagField = environmentSubstitute(meta.getRequeueStepDeliveryTagField());
+
+
         //init Producer
         data.exchtype    = meta.getExchtype();
         data.isAutodel   = meta.isAutodel();
@@ -388,6 +440,15 @@ public class AMQPPlugin extends BaseStep implements StepInterface
                 throw new AMQPException("Unable to retrieve routing key field : " + meta.getRouting());
             }
         }
+
+        if ( ! Const.isEmpty(deliveryTagField)) {
+            data.deliveryTagIndex = data.outputRowMeta.indexOfValue(deliveryTagField);
+
+            if (data.deliveryTagIndex < 0) {
+                throw new AMQPException("Unable to retrieve DeliveryTag field : " + deliveryTagField);
+            }
+        }
+
 
         if (data.bodyFieldIndex < 0) {
             throw new AMQPException("Unable to retrieve body field : " + body);
@@ -468,7 +529,49 @@ public class AMQPPlugin extends BaseStep implements StepInterface
                     logDebug(consumerTag + " :SHUTDOWN: " + sig.getMessage());
                 }
             };
-    }
+        }
+
+        if  (data.isConsumer) {
+
+            //bind to step with acknowledge rows on input stream
+            if ( ! Const.isEmpty(data.ackStepName) ) {
+            	StepInterface si = getTrans().getStepInterface( data.ackStepName, 0 );
+                if (si == null) throw new KettleException ("Can not find step : " + data.ackStepName );
+
+            	StepInterface siTest = getTrans().getStepInterface( data.ackStepName, 1 );
+                if (siTest != null) throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.ackStepName );
+
+        	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.ackStepDeliveryTagField);
+                rsw.setAckDelegate(this);
+            	si.addRowListener(rsw);
+            }
+
+            //bind to step with rejected rows on input stream
+            if ( ! Const.isEmpty(data.rejectStepName) ) {
+            	StepInterface si = getTrans().getStepInterface( data.rejectStepName, 0 );
+                if (si == null) throw new KettleException ("Can not find step : " + data.rejectStepName );
+
+            	StepInterface siTest = getTrans().getStepInterface( data.rejectStepName, 1 );
+                if (siTest != null) throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.rejectStepName );
+
+        	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.rejectStepDeliveryTagField);
+                rsw.setRejectDelegate(this);
+            	si.addRowListener(rsw);
+            }
+
+            //bind to step with rejected rows on input stream
+            if (! Const.isEmpty(data.requeueStepName) ) {
+            	StepInterface si = getTrans().getStepInterface( data.requeueStepName, 0 );
+                if (si == null) throw new KettleException ("Can not find step : " + data.requeueStepName );
+
+            	StepInterface siTest = getTrans().getStepInterface( data.requeueStepName, 1 );
+                if (siTest != null) throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.requeueStepName );
+
+        	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.requeueStepDeliveryTagField);
+                rsw.setRequeueDelegate(this);
+            	si.addRowListener(rsw);
+            }
+        }
 
         //Consumer Delcare Queue/Exchanges and Binding
         if (data.isConsumer && data.isDeclare) {

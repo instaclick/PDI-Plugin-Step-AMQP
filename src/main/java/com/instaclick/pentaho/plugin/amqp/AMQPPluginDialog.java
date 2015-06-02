@@ -160,6 +160,12 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formBodyLabel;
     private FormData formBodyText;
 
+    private Label labelDeliveryTagField;
+    private TextVar textDeliveryTagField;
+    private FormData formDeliveryTagLabel;
+    private FormData formDeliveryTagText;
+
+    
     private Label labelTransactional;
     private Button checkTransactional;
     private FormData formTransactionalLabel;

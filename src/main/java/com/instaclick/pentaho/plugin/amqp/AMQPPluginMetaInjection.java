@@ -29,6 +29,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     AMQP_USESSL( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.UseSsl.Label") ),
 
     BODY( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Body.Label") ),
+    DELIVERYTAG( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.DeliveryTag.Label") ),
     TARGET( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Target.Label") ),
     ROUTING( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Routing.Label") ),
     LIMIT( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Limit.Label") ),
@@ -48,6 +49,14 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     PREFETCHCOUNT( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.PrefetchCount.Label") ),
     DECLARE( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Declare.Label") ),
 
+
+    ACKSTEPDELIVERYTAG( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.AckStepDeliveryTag.Label") ),
+    REJECTSTEPDELIVERYTAG( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.RejectStepDeliveryTag.Label") ),
+    REQUEUESTEPDELIVERYTAG( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.RequeueStepDeliveryTag.Label") ),
+    ACKSTEPNAME( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.AckStepName.Label") ),
+    REJECTSTEPNAME( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.RejectStepName.Label") ),
+    REQUEUESTEPNAME( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.RequeueStepName.Label") ),
+ 
 
     BINDINGS( ValueMetaInterface.TYPE_NONE, getString("AmqpPlugin.Binding.Label") ),
     BINDING_ROW( ValueMetaInterface.TYPE_NONE, "One binding row" ),
@@ -103,6 +112,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     , Entry.AMQP_PORT
     , Entry.AMQP_VHOST
     , Entry.BODY
+    , Entry.DELIVERYTAG
     , Entry.TARGET
     , Entry.ROUTING
     , Entry.LIMIT
@@ -116,6 +126,13 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     , Entry.WAITTIMEOUT
     , Entry.PREFETCHCOUNT
     , Entry.DECLARE
+    , Entry.ACKSTEPDELIVERYTAG
+    , Entry.REJECTSTEPDELIVERYTAG
+    , Entry.REQUEUESTEPDELIVERYTAG
+    , Entry.ACKSTEPNAME
+    , Entry.REJECTSTEPNAME
+    , Entry.REQUEUESTEPNAME
+
     };
     for ( Entry topEntry : topEntries ) {
       all.add( new StepInjectionMetaEntry( topEntry.name(), topEntry.getValueType(), topEntry.getDescription() ) );
@@ -206,6 +223,31 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
         case BODY:
           meta.setBodyField( lookValue );
           break;
+        case DELIVERYTAG:
+          meta.setDeliveryTagField( lookValue );
+          break;
+
+        case ACKSTEPNAME:
+          meta.setAckStepName( lookValue );
+          break;
+        case ACKSTEPDELIVERYTAG:
+          meta.setAckStepDeliveryTagField( lookValue );
+          break;
+        case REJECTSTEPNAME:
+          meta.setRejectStepName( lookValue );
+          break;
+        case REJECTSTEPDELIVERYTAG:
+          meta.setRejectStepDeliveryTagField( lookValue );
+          break;
+        case REQUEUESTEPNAME:
+          meta.setRequeueStepName( lookValue );
+          break;
+        case REQUEUESTEPDELIVERYTAG:
+          meta.setRequeueStepDeliveryTagField( lookValue );
+          break;
+
+
+
         case TARGET:
           meta.setTarget( lookValue );
           break;
@@ -296,6 +338,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     list.add( StepInjectionUtil.getEntry( Entry.AMQP_URI, meta.getUri() ) );
 
     list.add( StepInjectionUtil.getEntry( Entry.BODY, meta.getBodyField() ) );
+    list.add( StepInjectionUtil.getEntry( Entry.DELIVERYTAG, meta.getDeliveryTagField() ) );
     list.add( StepInjectionUtil.getEntry( Entry.TARGET, meta.getTarget() ) );
     list.add( StepInjectionUtil.getEntry( Entry.ROUTING, meta.getRouting() ) );
     list.add( StepInjectionUtil.getEntry( Entry.LIMIT, meta.getLimitString() ) );
@@ -315,6 +358,12 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
     list.add( StepInjectionUtil.getEntry( Entry.PREFETCHCOUNT, meta.getPrefetchCountString() ) );
     list.add( StepInjectionUtil.getEntry( Entry.DECLARE, meta.isDeclare() ) );
 
+    list.add( StepInjectionUtil.getEntry( Entry.ACKSTEPNAME, meta.getAckStepName() ) );
+    list.add( StepInjectionUtil.getEntry( Entry.ACKSTEPDELIVERYTAG, meta.getAckStepDeliveryTagField() ) );
+    list.add( StepInjectionUtil.getEntry( Entry.REJECTSTEPNAME, meta.getRejectStepName() ) );
+    list.add( StepInjectionUtil.getEntry( Entry.REJECTSTEPDELIVERYTAG, meta.getRejectStepDeliveryTagField() ) );
+    list.add( StepInjectionUtil.getEntry( Entry.REQUEUESTEPNAME, meta.getRequeueStepName() ) );
+    list.add( StepInjectionUtil.getEntry( Entry.REQUEUESTEPDELIVERYTAG, meta.getRequeueStepDeliveryTagField() ) );
 
     StepInjectionMetaEntry fieldsEntry = StepInjectionUtil.getEntry( Entry.BINDINGS );
     list.add( fieldsEntry );
@@ -327,7 +376,6 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
       details.add( StepInjectionUtil.getEntry( Entry.BINDING_ROUTING_KEY, binding.getRouting() ) );
       fieldsEntry.getDetails().add( fieldEntry );
     }
-
     return list;
   }
 

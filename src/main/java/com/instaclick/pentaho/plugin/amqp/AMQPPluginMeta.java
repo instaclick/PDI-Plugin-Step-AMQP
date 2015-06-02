@@ -38,6 +38,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_TRANSACTIONAL = "transactional";
     private static final String FIELD_BODY_FIELD = "body_field";
     private static final String FIELD_ROUTING = "routing";
+    private static final String FIELD_DELIVERYTAG_FIELD = "deliverytag_field";
     private static final String FIELD_LIMIT = "limit";
     private static final String FIELD_PREFETCHCOUNT = "prefetchCount";
     private static final String FIELD_TARGET = "target";
@@ -64,9 +65,21 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String FIELD_REQUEUE = "requeue";
     private static final String FIELD_WAITTIMEOUT = "waiting_timout";
 
+
+    private static final String FIELD_ACKSTEPNAME = "ack_stepname";
+    private static final String FIELD_ACKDELIVERYTAG_FIELD = "ack_deliverytag_field";
+    private static final String FIELD_REJECTSTEPNAME = "reject_stepname";
+    private static final String FIELD_REJECTSTEPDELIVERYTAG_FIELD = "reject_deliverytag_field";
+    private static final String FIELD_REQUEUESTEPNAME = "requeue_stepname";
+    private static final String FIELD_REQUEUESTEPDELIVERYTAG_FIELD = "requeue_deliverytag_field";
+
     private static final String DEFAULT_BODY_FIELD = "message";
+    private static final String DEFAULT_DELIVERYTAG_FIELD = "amqpdeliverytag";
     private static final String DEFAULT_EXCHTYPE   = AMQPPluginData.EXCHTYPE_DIRECT;
     private static final String DEFAULT_BINDING_TARGET_TYPE = AMQPPluginData.TARGET_TYPE_QUEUE;
+
+
+
 
     private String uri;
     private String routing;
@@ -89,6 +102,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private boolean waitingConsumer = false;   
     private boolean transactional   = false;
     private String bodyField        = DEFAULT_BODY_FIELD;
+    private String deliveryTagField        = DEFAULT_DELIVERYTAG_FIELD;
+    public String ackStepName = null;
+    public String ackStepDeliveryTagField = null;
+    public String rejectStepName = null;
+    public String rejectStepDeliveryTagField = null;
+    public String requeueStepName = null;
+    public String requeueStepDeliveryTagField = null;
+
     private String mode             = AMQPPluginData.MODE_CONSUMER;
 
     private final List<AMQPPluginMeta.Binding> bindings = new ArrayList<AMQPPluginMeta.Binding>();
@@ -148,17 +169,25 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         if (AMQPPluginData.MODE_CONSUMER.equals(mode)) {
             // a value meta object contains the meta data for a field
-            final ValueMetaInterface b = new ValueMeta(getBodyField(), ValueMeta.TYPE_STRING);
+            final ValueMetaInterface b = new ValueMeta(space.environmentSubstitute(getBodyField()), ValueMeta.TYPE_STRING);
             // the name of the step that adds this field
             b.setOrigin(name);
             // modify the row structure and add the field this step generates
             inputRowMeta.addValueMeta(b);
 
-            if ( ! Const.isEmpty(routing)) {
-                final ValueMetaInterface r = new ValueMeta(routing, ValueMeta.TYPE_STRING);
+            if ( ! Const.isEmpty(getRouting())) {
+                final ValueMetaInterface r = new ValueMeta(space.environmentSubstitute(getRouting()), ValueMeta.TYPE_STRING);
                 r.setOrigin(name);
                 inputRowMeta.addValueMeta(r);
             }
+
+            if ( ! Const.isEmpty(deliveryTagField)) {
+                final ValueMetaInterface r = new ValueMeta(space.environmentSubstitute(getDeliveryTagField()), ValueMeta.TYPE_INTEGER);
+                r.setOrigin(name);
+                inputRowMeta.addValueMeta(r);
+            }
+
+
         }
     }
 
@@ -185,6 +214,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_TRANSACTIONAL, isTransactional()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_BODY_FIELD, getBodyField()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_DELIVERYTAG_FIELD, getDeliveryTagField()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_LIMIT, getLimitString()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_PREFETCHCOUNT, getPrefetchCountString()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_WAITTIMEOUT, getWaitTimeoutString()));
@@ -217,6 +247,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         }
         bufer.append("    </" + FIELD_BINDING + ">").append(Const.CR);
 
+
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_ACKSTEPNAME, getAckStepName()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_ACKDELIVERYTAG_FIELD, getAckStepDeliveryTagField()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REJECTSTEPNAME, getRejectStepName()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REJECTSTEPDELIVERYTAG_FIELD, getRejectStepDeliveryTagField()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REQUEUESTEPNAME, getRequeueStepName()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_REQUEUESTEPDELIVERYTAG_FIELD, getRequeueStepDeliveryTagField()));
+
         return bufer.toString();
     }
 
@@ -226,6 +264,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         try {
             setTransactional(XMLHandler.getTagValue(stepnode, FIELD_TRANSACTIONAL));
             setBodyField(XMLHandler.getTagValue(stepnode, FIELD_BODY_FIELD));
+            setDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_DELIVERYTAG_FIELD));
             setRouting(XMLHandler.getTagValue(stepnode, FIELD_ROUTING));
             setTarget(XMLHandler.getTagValue(stepnode, FIELD_TARGET));
             setLimit(XMLHandler.getTagValue(stepnode, FIELD_LIMIT));
@@ -261,6 +300,15 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
                 addBinding(targetItem, typeItem, routingItem);
             }
 
+
+            setAckStepName(XMLHandler.getTagValue(stepnode, FIELD_ACKSTEPNAME));
+            setAckStepDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_ACKDELIVERYTAG_FIELD));
+            setRejectStepName(XMLHandler.getTagValue(stepnode, FIELD_REJECTSTEPNAME));
+            setRejectStepDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_REJECTSTEPDELIVERYTAG_FIELD));
+            setRequeueStepName(XMLHandler.getTagValue(stepnode, FIELD_REQUEUESTEPNAME));
+            setRequeueStepDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_REQUEUESTEPDELIVERYTAG_FIELD));
+
+
         } catch (Exception e) {
             throw new KettleXMLException("Unable to read step info from XML node", e);
         }
@@ -272,6 +320,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         try {
             setTransactional(rep.getStepAttributeString(idStep, FIELD_TRANSACTIONAL));
             setBodyField(rep.getStepAttributeString(idStep, FIELD_BODY_FIELD));
+            setDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_DELIVERYTAG_FIELD));
             setRouting(rep.getStepAttributeString(idStep, FIELD_ROUTING));
             setTarget(rep.getStepAttributeString(idStep, FIELD_TARGET));
             setLimit(rep.getStepAttributeString(idStep, FIELD_LIMIT));
@@ -305,6 +354,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
                 addBinding(targetItem, typeItem, routingItem);
             }
 
+            setAckStepName(rep.getStepAttributeString(idStep, FIELD_ACKSTEPNAME));
+            setAckStepDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_ACKDELIVERYTAG_FIELD));
+            setRejectStepName(rep.getStepAttributeString(idStep, FIELD_REJECTSTEPNAME));
+            setRejectStepDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_REJECTSTEPDELIVERYTAG_FIELD));
+            setRequeueStepName(rep.getStepAttributeString(idStep, FIELD_REQUEUESTEPNAME));
+            setRequeueStepDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_REQUEUESTEPDELIVERYTAG_FIELD));
+
+
         } catch (KettleDatabaseException dbe) {
             throw new KettleException("error reading step with id_step=" + idStep + " from the repository", dbe);
         } catch (KettleException e) {
@@ -318,6 +375,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         try {
             rep.saveStepAttribute(idTransformation, idStep, FIELD_TRANSACTIONAL, isTransactional());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_BODY_FIELD, getBodyField());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_DELIVERYTAG_FIELD, getDeliveryTagField());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_LIMIT, getLimitString());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_PREFETCHCOUNT, getPrefetchCountString());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_WAITTIMEOUT, getWaitTimeoutString());
@@ -349,6 +407,14 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
                 i++;
             }
 
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_ACKSTEPNAME, getAckStepName());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_ACKDELIVERYTAG_FIELD, getAckStepDeliveryTagField());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_REJECTSTEPNAME, getRejectStepName());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_REJECTSTEPDELIVERYTAG_FIELD, getRejectStepDeliveryTagField());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_REQUEUESTEPNAME, getRequeueStepName());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_REQUEUESTEPDELIVERYTAG_FIELD, getRequeueStepDeliveryTagField());
+
+
         } catch (KettleDatabaseException dbe) {
             throw new KettleException("Unable to save step information to the repository, id_step=" + idStep, dbe);
         }
@@ -360,6 +426,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.uri             = "amqp://guest:guest@localhost:5672";
         this.mode            = AMQPPluginData.MODE_CONSUMER;
         this.bodyField       = DEFAULT_BODY_FIELD;
+        this.deliveryTagField = DEFAULT_DELIVERYTAG_FIELD;
         this.exchtype        = DEFAULT_EXCHTYPE;
         this.username        = "";
         this.password        = "";
@@ -376,6 +443,13 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.waitingConsumer = false;
         this.prefetchCount   = 0;
         this.waitTimeout     = 60000L;
+        this.ackStepName = "";
+        this.ackStepDeliveryTagField = "";
+        this.rejectStepName = "";
+        this.rejectStepDeliveryTagField = "";
+        this.requeueStepName = "";
+        this.requeueStepDeliveryTagField = "";
+
         bindings.clear();
     }
 
@@ -636,6 +710,80 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     {
         this.routing = routing;
     }
+
+
+    public String getDeliveryTagField()
+    {
+        return deliveryTagField;
+    }
+
+    public void setDeliveryTagField(String val)
+    {
+        this.deliveryTagField = val;
+    }
+
+    public String getAckStepName()
+    {
+        return ackStepName;
+    }
+
+    public void setAckStepName(String val)
+    {
+        this.ackStepName = val;
+    }
+
+
+    public String getAckStepDeliveryTagField()
+    {
+        return ackStepDeliveryTagField;
+    }
+
+    public void setAckStepDeliveryTagField(String val)
+    {
+        this.ackStepDeliveryTagField = val;
+    }
+
+    public String getRejectStepName()
+    {
+        return rejectStepName;
+    }
+
+    public void setRejectStepName(String val)
+    {
+        this.rejectStepName = val;
+    }
+
+
+    public String getRejectStepDeliveryTagField()
+    {
+        return rejectStepDeliveryTagField;
+    }
+
+    public void setRejectStepDeliveryTagField(String val)
+    {
+        this.rejectStepDeliveryTagField = val;
+    }
+
+    public String getRequeueStepName()
+    {
+        return requeueStepName;
+    }
+
+    public void setRequeueStepName(String val)
+    {
+        this.requeueStepName = val;
+    }
+
+    public String getRequeueStepDeliveryTagField()
+    {
+        return requeueStepDeliveryTagField;
+    }
+
+    public void setRequeueStepDeliveryTagField(String val)
+    {
+        this.requeueStepDeliveryTagField = val;
+    }
+
 
     public Long getLimit()
     {
