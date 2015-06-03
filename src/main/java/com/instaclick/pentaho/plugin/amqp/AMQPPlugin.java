@@ -77,7 +77,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         {
             logMinimal("Trans Finished - transactional=" + data.isTransactional);
 
-            if ( ! data.isTransactional) {
+            if ( ! data.isTransactional && !data.activeConfirmation ) {
                 return;
             }
 
@@ -110,6 +110,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             if (!data.isTransactional) {
                 logBasic("IMMIDIATE ACK MESSAGE   " + deliveryTag);
                 channel.basicAck(deliveryTag, false);
+                data.ack++;
             }  else {
                 logBasic("POSTPONED ACK MESSAGE   " + deliveryTag);
                 data.ackMsgInTransaction.add(deliveryTag);
@@ -128,6 +129,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             if (!data.isTransactional) {
                 logBasic("IMMIDIATE REJECT MESSAGE   " + deliveryTag);
                 channel.basicNack(deliveryTag, false, false);
+                data.rejected++;
             }  else {
                 logBasic("POSTPONED REJECT MESSAGE   " + deliveryTag);
                 data.rejectedMsgInTransaction.add(deliveryTag);
@@ -573,9 +575,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             throw new AMQPException("Unable to open an AMQP channel");
         }
 
-        if (data.isTransactional) {
-            getTrans().addTransListener(transListener);
-        }
+    
 
         if (data.isWaitingConsumer) {
             consumer = new QueueingConsumer(channel) {
@@ -641,6 +641,12 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
         }
 
+        // hook to transListener, to make final flush to transactional case, or in case ack/nack steps should finish.
+        if (data.isTransactional || data.activeConfirmation ) {
+            getTrans().addTransListener(transListener);
+        }
+
+
         //Consumer Delcare Queue/Exchanges and Binding
         if (data.isConsumer && data.isDeclare) {
             logMinimal(String.format("Declaring Queue '%s' { durable:%s, exclusive:%s, auto_delete:%s}", data.target,  data.isDurable, data.isExclusive, data.isAutodel));
@@ -688,9 +694,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
         logDebug("DISPOSE INVOKED");
 
-        waitForConfirtmationStepsFinished();
+//        waitForConfirtmationStepsFinished();
 
-        if ( ! data.isTransactional) {
+        if ( ! data.isTransactional && !data.activeConfirmation ) {
             flush();
         }
 
