@@ -227,6 +227,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
         // publish the current message
         channel.basicPublish(data.target, data.routing, null, data.body.getBytes());
+        // set metadata about publishing event
+        incrementLinesOutput();
 
         // put the row to the output row stream
         putRow(data.outputRowMeta, r);
