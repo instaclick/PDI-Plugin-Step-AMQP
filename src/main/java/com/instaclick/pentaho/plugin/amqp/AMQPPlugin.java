@@ -88,6 +88,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 return;
             }
 
+
+            if (isStopped()) {
+                logMinimal("Transformation STOPPED, ignoring changes");
+                closeAmqp();
+                return;
+            }
+
             flush();
         }
     };
