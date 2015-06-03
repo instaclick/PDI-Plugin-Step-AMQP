@@ -99,6 +99,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
     public void ackDelivery(long deliveryTag) throws IOException
     {
         if (data.isConsumer) {
+
             if (!data.isTransactional) {
                 logBasic("IMMIDIATE ACK MESSAGE   " + deliveryTag);
                 channel.basicAck(deliveryTag, false);
@@ -124,8 +125,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 logBasic("POSTPONED REJECT MESSAGE   " + deliveryTag);
                 data.rejectedMsgInTransaction.add(deliveryTag);
             }
+            incrementLinesRejected();
         }
-
     }
 
 
@@ -161,14 +162,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 consume();
 
                 setOutputDone();
-
-                //now output rowset closed, so we can wait for our confirmation steps
-                if ( data.activeConfirmation )  {
-                    while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
-                        Thread.sleep(500);
-                        logDebug("Wait for steps used in CONFIRMATION");
-                    }                
-                }
 
                 return false;
             } catch (IOException e) {
@@ -260,6 +253,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             data.body    = new String(body);
             data.amqpTag = tag;
             data.count ++;
+            incrementLinesInput();
 
             return true;
         }
@@ -277,6 +271,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         data.body    = new String(body);
         data.amqpTag = tag;
         data.count ++;
+        incrementLinesInput();
 
         return true;
     }
@@ -665,10 +660,38 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         meta = (AMQPPluginMeta) smi;
         data = (AMQPPluginData) sdi;
 
+        logDebug("DISPOSE INVOKED");
+
+        waitForConfirtmationStepsFinished();
+
+
         if ( ! data.isTransactional) {
             flush();
         }
 
         super.dispose(smi, sdi);
     }
+
+
+    /*
+    if we have non-finished steps sniffed for data needed for confirmation we have to wait until steps finished.
+    in case of non-transaction used : we should not wait for all steps in transformation to finish and doing flush/close only at the end.
+    */
+    public void waitForConfirtmationStepsFinished() {
+
+       //now output rowset closed, so we can wait for our confirmation steps
+       if ( data.activeConfirmation )  {
+          while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
+               try { Thread.sleep(500); }
+               catch (InterruptedException e) { setErrors(1L); }
+               synchronized(this) {
+                  if ( data.watchedConfirmStep.size() > 0 ) {
+                     logDebug("Wait for steps used in CONFIRMATION : " + data.watchedConfirmStep.get(0).getStepMeta().getName());
+                  }
+               }
+          }                
+       }
+
+    }
+
 }
