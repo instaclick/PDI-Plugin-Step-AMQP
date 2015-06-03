@@ -43,23 +43,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
     private Connection conn = null;
     private Channel channel = null;
 
-    private final StepListener confirmStepListener = new StepListener()
-    {
-        @Override
-        public void stepActive( Trans trans, StepMeta stepMeta, StepInterface step )
-        {
-        }
-        
-        @Override
-        public void stepFinished( Trans trans, StepMeta stepMeta, StepInterface step )
-        {
-            synchronized(this) {
-                data.watchedConfirmStep.remove(step);
-            };
-            logDebug("DETECT FINISHED STEP : " + step.getStepMeta().getName() + ". need wait for steps yet : " + data.watchedConfirmStep.size());
-        }
-    };
-
     private final TransListener transListener = new TransListener()
     {
         @Override
@@ -598,7 +581,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             if ( ! Const.isEmpty(data.ackStepName) || ! Const.isEmpty(data.rejectStepName) )            {
                 // we start active confirmation , need not to Ack messages in batches
                 data.activeConfirmation = true;
-                data.watchedConfirmStep = new ArrayList<StepInterface>();
             }
 
             //bind to step with acknowledge rows on input stream
@@ -613,9 +595,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.ackStepDeliveryTagField);
                 rsw.setAckDelegate(this);
             	si.addRowListener(rsw);
-
-                si.addStepListener(confirmStepListener);
-                data.watchedConfirmStep.add(si);
 
                 if (data.isTransactional)  data.ackMsgInTransaction = new ArrayList<Long>();
             }
@@ -632,9 +611,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.rejectStepDeliveryTagField);
                 rsw.setRejectDelegate(this);
             	si.addRowListener(rsw);
-
-                si.addStepListener(confirmStepListener);
-                data.watchedConfirmStep.add(si);
 
                 if (data.isTransactional)  data.rejectedMsgInTransaction = new ArrayList<Long>();
             }
@@ -694,7 +670,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
 
         logDebug("DISPOSE INVOKED");
 
-//        waitForConfirtmationStepsFinished();
 
         if ( ! data.isTransactional && !data.activeConfirmation ) {
             flush();
@@ -703,26 +678,5 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         super.dispose(smi, sdi);
     }
 
-
-    /*
-    if we have non-finished steps sniffed for data needed for confirmation we have to wait until steps finished.
-    in case of non-transaction used : we should not wait for all steps in transformation to finish and doing flush/close only at the end.
-    */
-    public void waitForConfirtmationStepsFinished() {
-
-       //now output rowset closed, so we can wait for our confirmation steps
-       if ( data.activeConfirmation )  {
-          while (!isStopped() && data.watchedConfirmStep.size() > 0) {    
-               try { Thread.sleep(500); }
-               catch (InterruptedException e) { setErrors(1L); }
-               synchronized(this) {
-                  if ( data.watchedConfirmStep.size() > 0 ) {
-                     logDebug("Wait for steps used in CONFIRMATION : " + data.watchedConfirmStep.get(0).getStepMeta().getName());
-                  }
-               }
-          }                
-       }
-
-    }
 
 }

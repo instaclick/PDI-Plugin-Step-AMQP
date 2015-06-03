@@ -61,8 +61,6 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public List<Long> ackMsgInTransaction = null;
     public List<Long> rejectedMsgInTransaction = null;
 
-    public ArrayList<StepInterface> watchedConfirmStep = null;
-
     public AMQPPluginData()
     {
         super();
