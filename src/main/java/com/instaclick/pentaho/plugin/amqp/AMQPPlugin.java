@@ -107,6 +107,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 logBasic("POSTPONED ACK MESSAGE   " + deliveryTag);
                 data.ackMsgInTransaction.add(deliveryTag);
             }
+            data.ack++;
         }
     }
 
@@ -126,6 +127,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 data.rejectedMsgInTransaction.add(deliveryTag);
             }
             incrementLinesRejected();
+            data.rejected++;
         }
     }
 
@@ -308,6 +310,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             if ( ! data.isTransactional && ! data.isRequeue && ! data.activeConfirmation) {
                 logDebug("basicAck : " + data.amqpTag);
                 channel.basicAck(data.amqpTag, true);
+                data.ack++;
             }
 
             if (data.count >= data.limit) {
@@ -325,18 +328,27 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         if (data.isConsumer  && ! data.isRequeue && channel.isOpen() ) {
             try {
                 if ( data.activeConfirmation && data.isTransactional )  { 
-                    //ack all good
-                    logMinimal("Ack All Good messages, total count  : " + data.ackMsgInTransaction.size());
-                    for (Long ampqTag : data.ackMsgInTransaction )  channel.basicAck(ampqTag, false);
-                    //reject all with errors
-                    logMinimal("Ack All Bad messages, total count  : " + data.rejectedMsgInTransaction.size());
-                    for (Long ampqTag : data.rejectedMsgInTransaction )  channel.basicNack(ampqTag, false, false);
+
+                    if (data.ackMsgInTransaction != null) {
+                       //ack all good
+                       logMinimal("ACKNOWLEDGED MESSAGES : " + data.ackMsgInTransaction.size());
+                       for (Long ampqTag : data.ackMsgInTransaction )  channel.basicAck(ampqTag, false);
+                    }
+
+                    if (data.rejectedMsgInTransaction != null) {
+                      //reject all with errors
+                      logMinimal("REJECTED MESSAGES  : " + data.rejectedMsgInTransaction.size());
+                      for (Long ampqTag : data.rejectedMsgInTransaction )  channel.basicNack(ampqTag, false, false);
+                    }
                 } 
 
                 if ( !data.activeConfirmation && data.isTransactional )  {
                     logMinimal("Ack All messages : " + data.amqpTag);
                     channel.basicAck(data.amqpTag, true);
+                    data.ack = data.count;
                 }
+
+                logMinimal("QUEUE MESSAGES RECEIVED : ACK=" + data.ack + ", REJECTED=" + data.rejected + ", REQUEUE=" + (data.count - data.ack - data.rejected) );
 
             } catch (IOException ex) {
                 logError(ex.getMessage());
@@ -665,7 +677,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         logDebug("DISPOSE INVOKED");
 
         waitForConfirtmationStepsFinished();
-
 
         if ( ! data.isTransactional) {
             flush();

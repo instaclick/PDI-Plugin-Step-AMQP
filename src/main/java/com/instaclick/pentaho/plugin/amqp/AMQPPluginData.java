@@ -45,8 +45,8 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public Long waitTimeout;
     public int prefetchCount=0;
     public long count = 0;
-
-
+    public long ack = 0;
+    public long rejected = 0;
 
     // Delayed confirmation realted
     public Integer deliveryTagIndex = null;
