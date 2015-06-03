@@ -107,7 +107,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 logBasic("POSTPONED ACK MESSAGE   " + deliveryTag);
                 data.ackMsgInTransaction.add(deliveryTag);
             }
-            data.ack++;
         }
     }
 
@@ -127,7 +126,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 data.rejectedMsgInTransaction.add(deliveryTag);
             }
             incrementLinesRejected();
-            data.rejected++;
         }
     }
 
@@ -332,13 +330,19 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                     if (data.ackMsgInTransaction != null) {
                        //ack all good
                        logMinimal("ACKNOWLEDGED MESSAGES : " + data.ackMsgInTransaction.size());
-                       for (Long ampqTag : data.ackMsgInTransaction )  channel.basicAck(ampqTag, false);
+                       for (Long ampqTag : data.ackMsgInTransaction )  {    
+                         channel.basicAck(ampqTag, false);
+                         data.ack++;
+                       }
                     }
 
                     if (data.rejectedMsgInTransaction != null) {
                       //reject all with errors
                       logMinimal("REJECTED MESSAGES  : " + data.rejectedMsgInTransaction.size());
-                      for (Long ampqTag : data.rejectedMsgInTransaction )  channel.basicNack(ampqTag, false, false);
+                      for (Long ampqTag : data.rejectedMsgInTransaction ) {
+                         channel.basicNack(ampqTag, false, false);
+                         data.rejected++;
+                      }
                     }
                 } 
 
@@ -347,8 +351,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                     channel.basicAck(data.amqpTag, true);
                     data.ack = data.count;
                 }
-
-                logMinimal("QUEUE MESSAGES RECEIVED : ACK=" + data.ack + ", REJECTED=" + data.rejected + ", REQUEUE=" + (data.count - data.ack - data.rejected) );
 
             } catch (IOException ex) {
                 logError(ex.getMessage());
@@ -406,6 +408,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 logError(ex.getMessage());
             }
         }
+
+       if (data.isConsumer) logMinimal("QUEUE MESSAGES RECEIVED : ACK=" + data.ack + ", REJECTED=" + data.rejected + ", REQUEUE=" + (data.count - data.ack - data.rejected) );
+
     }
 
     @Override
