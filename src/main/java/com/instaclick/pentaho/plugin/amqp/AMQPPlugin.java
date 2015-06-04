@@ -286,8 +286,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             Object[] row = RowDataUtil.allocateRowData(data.outputRowMeta.size());
 
             row[data.bodyFieldIndex] = data.body;
-            if ( data.routingIndex != null ) row[data.routingIndex]   = data.routing;
-            if ( data.deliveryTagIndex != null) row[data.deliveryTagIndex] = data.amqpTag;
+            if ( data.routingIndex != null ) {
+                row[data.routingIndex]   = data.routing;
+            }
+
+            if ( data.deliveryTagIndex != null) {
+                row[data.deliveryTagIndex] = data.amqpTag;
+            }
 
             // put the row to the output row stream
             putRow(data.outputRowMeta, row);
