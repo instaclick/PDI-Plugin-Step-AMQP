@@ -597,8 +597,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         }
 
         if  (data.isConsumer) {
-
-            if ( ! Const.isEmpty(data.ackStepName) || ! Const.isEmpty(data.rejectStepName) )            {
+            if ( ! Const.isEmpty(data.ackStepName) || ! Const.isEmpty(data.rejectStepName) )  {
                 // we start active confirmation , need not to Ack messages in batches
                 data.activeConfirmation = true;
             }
@@ -628,7 +627,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             //bind to step with rejected rows on input stream
             if ( ! Const.isEmpty(data.rejectStepName) ) {
 
-            	StepInterface si = getTrans().getStepInterface( data.rejectStepName, 0 );
+                StepInterface si = getTrans().getStepInterface( data.rejectStepName, 0 );
                 if (si == null) {
                     throw new KettleException ("Can not find step : " + data.rejectStepName );
                 }

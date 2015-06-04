@@ -23,18 +23,18 @@ import org.pentaho.di.trans.step.RowListener;
 import org.pentaho.di.core.exception.KettleValueException;
 
 public class ConfirmationRowStepWatcher implements RowListener {
-      int rowsRead = 0;
-      private String deliveryTagName = null;
-      private AMQPConfirmation   ackDelegate;
-      private AMQPConfirmation   rejectDelegate;
+    int rowsRead = 0;
+    private String deliveryTagName = null;
+    private AMQPConfirmation   ackDelegate;
+    private AMQPConfirmation   rejectDelegate;
 
-      public ConfirmationRowStepWatcher(String deliveryTagName) {
+    public ConfirmationRowStepWatcher(String deliveryTagName) {
         this.deliveryTagName = deliveryTagName;
-      }
+    }
 
-      @Override
-      public void rowReadEvent( RowMetaInterface rowMeta, Object[] row ) throws KettleStepException
-      {
+    @Override
+    public void rowReadEvent( RowMetaInterface rowMeta, Object[] row ) throws KettleStepException
+    {
         Long deliveryTag=-1L;
         try {
             deliveryTag = rowMeta.getInteger(row,rowMeta.indexOfValue(deliveryTagName));
@@ -60,18 +60,16 @@ public class ConfirmationRowStepWatcher implements RowListener {
         };
 
         
-      }
+    }
 
-      public void rowWrittenEvent( RowMetaInterface rowMeta, Object[] row ) {
-   
-      }
+    public void rowWrittenEvent( RowMetaInterface rowMeta, Object[] row ) {
+    }
 
-      public void errorRowWrittenEvent( RowMetaInterface rowMeta, Object[] row ) {
-    
-      }
+    public void errorRowWrittenEvent( RowMetaInterface rowMeta, Object[] row ) {
+    }
 
-      public void setAckDelegate(BaseStep step, AMQPConfirmation deleg) throws AMQPException
-      { 
+    public void setAckDelegate(BaseStep step, AMQPConfirmation deleg) throws AMQPException
+    { 
         step.logDebug("SET ACK DELEGATE");
 
         if (ackDelegate != null )  {
@@ -81,10 +79,10 @@ public class ConfirmationRowStepWatcher implements RowListener {
             throw new AMQPException("Already set Reject Delegate. SIMULTANOUES ack is impossible");
         }
         ackDelegate = deleg;
-      }
+    }
 
-      public void setRejectDelegate(BaseStep step, AMQPConfirmation deleg) throws AMQPException
-      { 
+    public void setRejectDelegate(BaseStep step, AMQPConfirmation deleg) throws AMQPException
+    { 
         step.logDebug("SET REJECT DELEGATE");
 
         if (rejectDelegate != null ) {
@@ -94,7 +92,7 @@ public class ConfirmationRowStepWatcher implements RowListener {
             throw new AMQPException("Already set Acknowledger Delegate. SIMULTANOUES ack is impossible");
         }
         rejectDelegate = deleg;
-      }
+    }
 
 
 
