@@ -605,28 +605,28 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         textBodyField.setLayoutData(formBodyText);
 
         // DeliveryTag
-       labelDeliveryTagField = new Label(wConnectionComp, SWT.RIGHT);
-       labelDeliveryTagField.setText(getString("AmqpPlugin.DeliveryTag.Label"));
-       props.setLook(labelDeliveryTagField);
+        labelDeliveryTagField = new Label(wConnectionComp, SWT.RIGHT);
+        labelDeliveryTagField.setText(getString("AmqpPlugin.DeliveryTag.Label"));
+        props.setLook(labelDeliveryTagField);
 
-       formDeliveryTagLabel       = new FormData();
-       formDeliveryTagLabel.left  = new FormAttachment(0, 0);
-       formDeliveryTagLabel.right = new FormAttachment(middle, -margin);
-       formDeliveryTagLabel.top   = new FormAttachment(textBodyField , margin);
+        formDeliveryTagLabel       = new FormData();
+        formDeliveryTagLabel.left  = new FormAttachment(0, 0);
+        formDeliveryTagLabel.right = new FormAttachment(middle, -margin);
+        formDeliveryTagLabel.top   = new FormAttachment(textBodyField , margin);
 
-       labelDeliveryTagField.setLayoutData(formDeliveryTagLabel);
+        labelDeliveryTagField.setLayoutData(formDeliveryTagLabel);
 
-       textDeliveryTagField = new TextVar(transMeta, wConnectionComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+        textDeliveryTagField = new TextVar(transMeta, wConnectionComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
 
-       props.setLook(textDeliveryTagField);
-       textDeliveryTagField.addModifyListener(modifyListener);
+        props.setLook(textDeliveryTagField);
+        textDeliveryTagField.addModifyListener(modifyListener);
 
-       formDeliveryTagText        = new FormData();
-       formDeliveryTagText.left   = new FormAttachment(middle, 0);
-       formDeliveryTagText.right  = new FormAttachment(100, 0);
-       formDeliveryTagText.top    = new FormAttachment(textBodyField, margin);
+        formDeliveryTagText        = new FormData();
+        formDeliveryTagText.left   = new FormAttachment(middle, 0);
+        formDeliveryTagText.right  = new FormAttachment(100, 0);
+        formDeliveryTagText.top    = new FormAttachment(textBodyField, margin);
 
-       textDeliveryTagField.setLayoutData(formDeliveryTagText);
+        textDeliveryTagField.setLayoutData(formDeliveryTagText);
 
         
         // Target line
