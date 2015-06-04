@@ -617,7 +617,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 }
 
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.ackStepDeliveryTagField);
-                rsw.setAckDelegate(this);
+                rsw.setAckDelegate(this,this);
             	si.addRowListener(rsw);
 
                 if (data.isTransactional) {
@@ -639,7 +639,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
                 }
 
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.rejectStepDeliveryTagField);
-                rsw.setRejectDelegate(this);
+                rsw.setRejectDelegate(this,this);
             	si.addRowListener(rsw);
 
                 if (data.isTransactional) {

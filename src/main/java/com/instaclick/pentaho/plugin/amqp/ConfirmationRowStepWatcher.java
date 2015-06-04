@@ -40,14 +40,14 @@ public class ConfirmationRowStepWatcher implements RowListener {
             deliveryTag = rowMeta.getInteger(row,rowMeta.indexOfValue(deliveryTagName));
             rowsRead++;
 
-            synchronized (this) {
-                if ( ackDelegate != null ) {
+            if ( ackDelegate != null ) {
+                synchronized (this) {
                     ackDelegate.ackDelivery(deliveryTag);
                 }
             }
 
-            synchronized (this) {
-                if ( rejectDelegate != null ) {    
+            if ( rejectDelegate != null ) {    
+                synchronized (this) {
                     rejectDelegate.rejectDelivery(deliveryTag);
                 }
             }
@@ -70,15 +70,29 @@ public class ConfirmationRowStepWatcher implements RowListener {
     
       }
 
-      public void setAckDelegate(AMQPConfirmation deleg) throws AMQPException
+      public void setAckDelegate(BaseStep step, AMQPConfirmation deleg) throws AMQPException
       { 
-        if (ackDelegate != null ) throw new AMQPException("Already set Acknowldger Delegate.");
+        step.logDebug("SET ACK DELEGATE");
+
+        if (ackDelegate != null )  {
+            throw new AMQPException("Already set Acknowledger Delegate.");
+        }
+        if (rejectDelegate != null )  {
+            throw new AMQPException("Already set Reject Delegate. SIMULTANOUES ack is impossible");
+        }
         ackDelegate = deleg;
       }
 
-      public void setRejectDelegate(AMQPConfirmation deleg) throws AMQPException
+      public void setRejectDelegate(BaseStep step, AMQPConfirmation deleg) throws AMQPException
       { 
-        if (rejectDelegate != null ) throw new AMQPException("Already set Reject Delegate.");
+        step.logDebug("SET REJECT DELEGATE");
+
+        if (rejectDelegate != null ) {
+            throw new AMQPException("Already set Reject Delegate.");
+        }
+        if (ackDelegate != null )  {
+            throw new AMQPException("Already set Acknowledger Delegate. SIMULTANOUES ack is impossible");
+        }
         rejectDelegate = deleg;
       }
 
