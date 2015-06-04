@@ -41,11 +41,15 @@ public class ConfirmationRowStepWatcher implements RowListener {
             rowsRead++;
 
             synchronized (this) {
-             if ( ackDelegate != null ) ackDelegate.ackDelivery(deliveryTag);
+                if ( ackDelegate != null ) {
+                    ackDelegate.ackDelivery(deliveryTag);
+                }
             }
 
             synchronized (this) {
-             if ( rejectDelegate != null ) rejectDelegate.rejectDelivery(deliveryTag);
+                if ( rejectDelegate != null ) {    
+                    rejectDelegate.rejectDelivery(deliveryTag);
+                }
             }
 
 
