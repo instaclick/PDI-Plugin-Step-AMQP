@@ -82,43 +82,56 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
         }
     };
 
-    //implement delivery confrimation for interface AMQPConfirmation
-    // when we use transaction, just store deliveryTag to ack it on finish
-    // if use transaction but not use tag sniffers, transaction will Ack all messages in pre 2.2.1 manner
+    /** implement delivery confrimation for interface AMQPConfirmation
+    when we use transaction, just store deliveryTag to ack it on finish
+    if use transaction but not use tag sniffers, transaction will Ack all messages in pre 2.2.1 manner
+    */
     @Override
     public void ackDelivery(long deliveryTag) throws IOException
     {
-        if (data.isConsumer) {
 
-            if (!data.isTransactional) {
-                logBasic("IMMIDIATE ACK MESSAGE   " + deliveryTag);
-                channel.basicAck(deliveryTag, false);
-                data.ack++;
-            }  else {
-                logBasic("POSTPONED ACK MESSAGE   " + deliveryTag);
-                data.ackMsgInTransaction.add(deliveryTag);
-            }
+        if ( ! data.isConsumer) {
+            return;
         }
+
+
+        if (!data.isTransactional) {
+            logBasic("IMMIDIATE ACK MESSAGE   " + deliveryTag);
+            channel.basicAck(deliveryTag, false);
+            data.ack++;
+            return;
+        } 
+
+        logBasic("POSTPONED ACK MESSAGE   " + deliveryTag);
+        data.ackMsgInTransaction.add(deliveryTag);
+
     }
 
-    //implement delivery confrimation for interface AMQPConfirmation
-    // when we use transaction, just store deliveryTag to reject it on finish
-    // if use transaction but not use tag sniffers, transaction will Ack all messages in pre 2.2.1 manner
+    /** implement delivery confrimation for interface AMQPConfirmation
+    when we use transaction, just store deliveryTag to reject it on finish
+    if use transaction but not use tag sniffers, transaction will Ack all messages in pre 2.2.1 manner
+    */
     @Override
     public void rejectDelivery(long deliveryTag) throws IOException
     {
 
-        if (data.isConsumer) {
-            if (!data.isTransactional) {
-                logBasic("IMMIDIATE REJECT MESSAGE   " + deliveryTag);
-                channel.basicNack(deliveryTag, false, false);
-                data.rejected++;
-            }  else {
-                logBasic("POSTPONED REJECT MESSAGE   " + deliveryTag);
-                data.rejectedMsgInTransaction.add(deliveryTag);
-            }
-            incrementLinesRejected();
+        if ( ! data.isConsumer) {
+            return;
         }
+
+
+        incrementLinesRejected();
+
+        if (!data.isTransactional) {
+            logBasic("IMMIDIATE REJECT MESSAGE   " + deliveryTag);
+            channel.basicNack(deliveryTag, false, false);
+            data.rejected++;
+            return;           
+        } 
+
+        logBasic("POSTPONED REJECT MESSAGE   " + deliveryTag);
+        data.rejectedMsgInTransaction.add(deliveryTag);
+       
     }
 
 
@@ -406,7 +419,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             }
         }
 
-       if (data.isConsumer) logMinimal("QUEUE MESSAGES RECEIVED : ACK=" + data.ack + ", REJECTED=" + data.rejected + ", REQUEUE=" + (data.count - data.ack - data.rejected) );
+       if (data.isConsumer) {
+          logMinimal("QUEUE MESSAGES RECEIVED : ACK=" + data.ack + ", REJECTED=" + data.rejected + ", REQUEUE=" + (data.count - data.ack - data.rejected) );
+       }
 
     }
 
@@ -592,32 +607,44 @@ public class AMQPPlugin extends BaseStep implements StepInterface, AMQPConfirmat
             if ( ! Const.isEmpty(data.ackStepName) ) {
 
             	StepInterface si = getTrans().getStepInterface( data.ackStepName, 0 );
-                if (si == null) throw new KettleException ("Can not find step : " + data.ackStepName );
+                if (si == null) {
+                    throw new KettleException ("Can not find step : " + data.ackStepName );
+                }
 
             	StepInterface siTest = getTrans().getStepInterface( data.ackStepName, 1 );
-                if (siTest != null) throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.ackStepName );
+                if (siTest != null) {
+                    throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.ackStepName );
+                }
 
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.ackStepDeliveryTagField);
                 rsw.setAckDelegate(this);
             	si.addRowListener(rsw);
 
-                if (data.isTransactional)  data.ackMsgInTransaction = new ArrayList<Long>();
+                if (data.isTransactional) {
+                     data.ackMsgInTransaction = new ArrayList<Long>();
+                }
             }
 
             //bind to step with rejected rows on input stream
             if ( ! Const.isEmpty(data.rejectStepName) ) {
 
             	StepInterface si = getTrans().getStepInterface( data.rejectStepName, 0 );
-                if (si == null) throw new KettleException ("Can not find step : " + data.rejectStepName );
+                if (si == null) {
+                    throw new KettleException ("Can not find step : " + data.rejectStepName );
+                }
 
             	StepInterface siTest = getTrans().getStepInterface( data.rejectStepName, 1 );
-                if (siTest != null) throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.rejectStepName );
+                if (siTest != null) {
+                    throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.rejectStepName );
+                }
 
         	    ConfirmationRowStepWatcher rsw = new ConfirmationRowStepWatcher(data.rejectStepDeliveryTagField);
                 rsw.setRejectDelegate(this);
             	si.addRowListener(rsw);
 
-                if (data.isTransactional)  data.rejectedMsgInTransaction = new ArrayList<Long>();
+                if (data.isTransactional) {
+                     data.rejectedMsgInTransaction = new ArrayList<Long>();
+                }
             }
 
         }
