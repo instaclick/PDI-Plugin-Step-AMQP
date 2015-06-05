@@ -14,7 +14,7 @@
         <kettle.version>5.3.0.0-213</kettle.version>
         <guava.version>14.0.1</guava.version>
         <skipTests>true</skipTests>
-        <pluginInstallDir>/Applications/pentaho/pdi/design-tools/data-integration/plugins/steps/ic-amqp-plugin</pluginInstallDir>
+        <pluginInstallDir>path-to/data-integration/plugins/steps/ic-amqp-plugin</pluginInstallDir>
     </properties>
     <dependencies>
         <dependency>
@@ -80,14 +80,11 @@
             <name>thirdparty.pentaho.org</name>
             <url>http://repository.pentaho.org/artifactory/third-party</url>
         </repository>
-
         <repository>
             <id>mavex-xx.atalssian.com</id>
             <name>maven-xx.atalssian.com</name>
             <url>https://maven.atlassian.com/content/groups/public</url>
         </repository>
-
-
         <repository>
             <snapshots>
                 <enabled>false</enabled>
@@ -201,7 +198,7 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
-<!--                    <compilerArgument>-Xlint:deprecation</compilerArgument> -->
+                    <compilerArgument>-Xlint:deprecation</compilerArgument>
                 </configuration>
             </plugin>
         </plugins>

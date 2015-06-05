@@ -30,7 +30,7 @@ import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 import org.pentaho.di.trans.step.StepInjectionMetaEntry;
-import org.pentaho.di.trans.step.StepMetaInjectionInterface;
+import org.pentaho.metastore.api.IMetaStore;
 import org.w3c.dom.Node;
 
 public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
@@ -74,10 +74,6 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private static final String DEFAULT_BODY_FIELD = "message";
     private static final String DEFAULT_DELIVERYTAG_FIELD = "amqpdeliverytag";
     private static final String DEFAULT_EXCHTYPE   = AMQPPluginData.EXCHTYPE_DIRECT;
-    private static final String DEFAULT_BINDING_TARGET_TYPE = AMQPPluginData.TARGET_TYPE_QUEUE;
-
-
-
 
     private String uri;
     private String routing;
@@ -100,13 +96,12 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private boolean waitingConsumer = false;   
     private boolean transactional   = false;
     private String bodyField        = DEFAULT_BODY_FIELD;
-    private String deliveryTagField        = DEFAULT_DELIVERYTAG_FIELD;
-    public String ackStepName = null;
-    public String ackStepDeliveryTagField = null;
-    public String rejectStepName = null;
+    private String deliveryTagField = DEFAULT_DELIVERYTAG_FIELD;
+    public String ackStepName                = null;
+    public String ackStepDeliveryTagField    = null;
+    public String rejectStepName             = null;
     public String rejectStepDeliveryTagField = null;
-
-    private String mode             = AMQPPluginData.MODE_CONSUMER;
+    private String mode                      = AMQPPluginData.MODE_CONSUMER;
 
     private final List<AMQPPluginMeta.Binding> bindings = new ArrayList<AMQPPluginMeta.Binding>();
 
@@ -161,7 +156,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     }
 
     @Override
-    public void getFields(RowMetaInterface inputRowMeta, String name, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space) throws KettleStepException
+    public void getFields(RowMetaInterface inputRowMeta, String name, RowMetaInterface[] info, StepMeta nextStep, VariableSpace space, Repository repository, IMetaStore ims) throws KettleStepException
     {
         if (AMQPPluginData.MODE_CONSUMER.equals(mode)) {
             // a value meta object contains the meta data for a field
@@ -182,13 +177,11 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
                 r.setOrigin(name);
                 inputRowMeta.addValueMeta(r);
             }
-
-
         }
     }
 
     @Override
-    public void check(List<CheckResultInterface> remarks, TransMeta transmeta, StepMeta stepMeta, RowMetaInterface prev, String[] input, String[] output, RowMetaInterface info)
+    public void check(List<CheckResultInterface> remarks, TransMeta transmeta, StepMeta stepMeta, RowMetaInterface prev, String[] input, String[] output, RowMetaInterface info, VariableSpace vs, Repository rpstr, IMetaStore ims)
     {
         final CheckResult prevSizeCheck = (prev == null || prev.isEmpty())
                 ? new CheckResult(CheckResult.TYPE_RESULT_WARNING, "Not receiving any fields from previous steps!", stepMeta)
@@ -253,7 +246,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     }
 
     @Override
-    public void loadXML(Node stepnode, List<DatabaseMeta> databases, Map<String, Counter> counters) throws KettleXMLException
+    public void loadXML(Node stepnode, List<DatabaseMeta> databases, IMetaStore ims) throws KettleXMLException
     {
         try {
             setTransactional(XMLHandler.getTagValue(stepnode, FIELD_TRANSACTIONAL));
@@ -307,7 +300,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     }
 
     @Override
-    public void readRep(Repository rep, ObjectId idStep, List<DatabaseMeta> databases, Map<String, Counter> counters) throws KettleException
+    public void readRep(Repository rep, IMetaStore ims, ObjectId idStep, List<DatabaseMeta> databases) throws KettleException
     {
         try {
             setTransactional(rep.getStepAttributeString(idStep, FIELD_TRANSACTIONAL));
@@ -360,7 +353,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     }
 
     @Override
-    public void saveRep(Repository rep, ObjectId idTransformation, ObjectId idStep) throws KettleException
+    public void saveRep(Repository rep, IMetaStore ims, ObjectId idTransformation, ObjectId idStep) throws KettleException
     {
         try {
             rep.saveStepAttribute(idTransformation, idStep, FIELD_TRANSACTIONAL, isTransactional());
