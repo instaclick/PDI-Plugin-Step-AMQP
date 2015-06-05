@@ -4,6 +4,7 @@ import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
 import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import java.io.IOException;
 import java.util.List;
@@ -24,10 +25,11 @@ public class BasicConsumerProcessor extends BaseConsumerProcessor
             return false;
         }
 
-        final byte[] body = response.getBody();
-        final long tag    = response.getEnvelope().getDeliveryTag();
+        final byte[] body       = response.getBody();
+        final Envelope envelope = response.getEnvelope();
+        final long tag          = envelope.getDeliveryTag();
 
-        data.routing = response.getEnvelope().getRoutingKey();
+        data.routing = envelope.getRoutingKey();
         data.body    = new String(body);
         data.amqpTag = tag;
         data.count ++;
