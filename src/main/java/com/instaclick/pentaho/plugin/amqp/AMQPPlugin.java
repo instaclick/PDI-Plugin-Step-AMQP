@@ -1,14 +1,6 @@
 package com.instaclick.pentaho.plugin.amqp;
 
-import com.instaclick.pentaho.plugin.amqp.AMQPPluginMeta.Binding;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.GetResponse;
-import com.rabbitmq.client.QueueingConsumer;
-import com.rabbitmq.client.ShutdownSignalException;
 import java.io.IOException;
-import java.util.ArrayList;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.trans.Trans;
@@ -19,9 +11,10 @@ import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
+import com.instaclick.pentaho.plugin.amqp.processor.Processor;
+import com.instaclick.pentaho.plugin.amqp.processor.ProcessorFactory;
 import static org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted;
 import org.pentaho.di.core.Const;
-import org.pentaho.di.core.row.RowDataUtil;
 import org.pentaho.di.core.row.RowMeta;
 import org.pentaho.di.trans.TransListener;
 import org.pentaho.di.core.row.RowMetaInterface;
@@ -31,22 +24,16 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     private AMQPPluginData data;
     private AMQPPluginMeta meta;
 
-    private ConnectionFactory factory = new ConnectionFactory();
-    private QueueingConsumer consumer = null;
-    private Connection conn = null;
-    private Channel channel = null;
+    final private ProcessorFactory factory = new ProcessorFactory();
+    private Processor processor;
 
     private final TransListener transListener = new TransListener()
     {
         @Override
-        public void transStarted(Trans trans) throws KettleException
-        {
-        }
+        public void transStarted(Trans trans) throws KettleException { }
 
         @Override
-        public void transActive(Trans trans)
-        {
-        }
+        public void transActive(Trans trans) { }
 
         @Override
         public void transFinished(Trans trans) throws KettleException
@@ -59,54 +46,18 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
             if (trans.getErrors() > 0) {
                 logMinimal(String.format("Transformation failure, ignoring changes", trans.getErrors()));
-                closeAmqp();
+                onFailure();
 
                 return;
             }
 
             if (isStopped()) {
                 logMinimal("Transformation STOPPED, ignoring changes");
-                closeAmqp();
+                shutdown();
                 return;
             }
 
-            flush();
-        }
-    };
-
-    final AMQPConfirmationAck ackDelivery = new AMQPConfirmationAck(){
-        @Override
-        public void ackDelivery(long deliveryTag) throws IOException
-        {
-            if ( ! data.isTransactional) {
-                logDebug("Immidiate ack message   " + deliveryTag);
-                channel.basicAck(deliveryTag, false);
-                data.ack++;
-
-                return;
-            } 
-
-            logDebug("Postponed ack message   " + deliveryTag);
-            data.ackMsgInTransaction.add(deliveryTag);
-        }
-    };
-
-    final AMQPConfirmationReject rejectDelivery = new AMQPConfirmationReject() {
-        @Override
-        public void rejectDelivery(long deliveryTag) throws IOException
-        {
-            incrementLinesRejected();
-
-            if ( ! data.isTransactional) {
-                logDebug("Immidiate reject message   " + deliveryTag);
-                channel.basicNack(deliveryTag, false, false);
-                data.rejected++;
-
-                return;
-            }
-
-            logDebug("Postponed reject message   " + deliveryTag);
-            data.rejectedMsgInTransaction.add(deliveryTag);
+            onSuccess();
         }
     };
 
@@ -125,284 +76,44 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         if (first) {
             first = false;
 
-            if (AMQPPluginData.MODE_PRODUCER.equals(meta.getMode()) && r == null) {
-                setOutputDone();
-                return false;
-            }
-
             try {
                 initPluginStep();
             } catch (Exception e) {
                 throw new AMQPException(e.getMessage(), e);
             }
-        }
 
-        if (data.isConsumer) {
             try {
-                consume();
-
+                processor.start();
+            } catch (IOException e) {
                 setOutputDone();
-
-                return false;
-            } catch (IOException e) {
-                throw new AMQPException(e.getMessage(), e);
-            } catch (InterruptedException e) {
                 throw new AMQPException(e.getMessage(), e);
             }
         }
 
-        if (r == null) {
-            setOutputDone();
+        while ( ! isStopped()) {
 
-            return false;
-        }
-
-        if (data.isProducer) {
             try {
-                produce(r);
+                if ( ! processor.process(r)) {
+
+                    setOutputDone();
+
+                    return false;
+                }
             } catch (IOException e) {
                 throw new AMQPException(e.getMessage(), e);
             }
-        }
-
-        return true;
-    }
-
-    private void produce(Object[] r) throws IOException, KettleStepException
-    {
-        if (data.isTransactional && ! data.isTxOpen) {
-            channel.txSelect();
-
-            data.isTxOpen = true;
-        }
-
-        if (r.length < data.bodyFieldIndex || r[data.bodyFieldIndex] == null) {
-            String putErrorMessage = getLinesRead() + " - Ignore invalid message data row";
-
-            if (isDebug()) {
-                logDebug(putErrorMessage);
-            }
-
-            putError(getInputRowMeta(), r, 1, putErrorMessage, null, "ICAmqpPlugin001");
-
-            return;
-        }
-
-        if (data.routingIndex != null && (r.length < data.routingIndex || r[data.routingIndex] == null)) {
-            String putErrorMessage = getLinesRead() + " - Ignore invalid message routing row";
-
-            if (isDebug()) {
-                logDebug(putErrorMessage);
-            }
-
-            putError(getInputRowMeta(), r, 1, putErrorMessage, null, "ICAmqpPlugin002");
-
-            return;
-        }
-
-        data.body    = String.valueOf(r[data.bodyFieldIndex]);
-        data.routing = (data.routingIndex != null)
-                ? String.valueOf(r[data.routingIndex])
-                : "";
-
-        // publish the current message
-        channel.basicPublish(data.target, data.routing, null, data.body.getBytes());
-        // set metadata about publishing event
-        incrementLinesOutput();
-
-        // put the row to the output row stream
-        putRow(data.outputRowMeta, r);
-
-        // log progress
-        if (checkFeedback(getLinesRead())) {
-            logBasic(String.format("linenr %s", getLinesRead()));
-        }
-    }
-
-    private boolean consumeData(long timeout) throws IOException, InterruptedException
-    {
-        if (data.isWaitingConsumer) {
-            final QueueingConsumer.Delivery delivery = consumer.nextDelivery(timeout);
-
-            if (delivery == null) {
-                return false;
-            }
-
-            final byte[] body = delivery.getBody();
-            final long tag    = delivery.getEnvelope().getDeliveryTag();
-
-            data.routing = delivery.getEnvelope().getRoutingKey();
-            data.body    = new String(body);
-            data.amqpTag = tag;
-            data.count ++;
-            incrementLinesInput();
-
-            return true;
-        }
-
-        GetResponse response = channel.basicGet(data.target, false);
-
-        if (response == null) {
-            return false;
-        }
-
-        final byte[] body = response.getBody();
-        final long tag    = response.getEnvelope().getDeliveryTag();
-
-        data.routing = response.getEnvelope().getRoutingKey();
-        data.body    = new String(body);
-        data.amqpTag = tag;
-        data.count ++;
-        incrementLinesInput();
-
-        return true;
-    }
-
-    private void consume() throws IOException, KettleStepException, InterruptedException
-    {
-        if (data.isWaitingConsumer) {
-            logMinimal("Waiting for messages : " + data.waitTimeout);
-            channel.basicConsume(data.target, false, consumer);
-        }
-
-        do {
-            if ( ! consumeData(data.waitTimeout)) {
-                return;
-            }
-
-            // safely add the unique field at the end of the output row
-            Object[] row = RowDataUtil.allocateRowData(data.outputRowMeta.size());
-
-            row[data.bodyFieldIndex] = data.body;
-            if ( data.routingIndex != null ) {
-                row[data.routingIndex]   = data.routing;
-            }
-
-            if ( data.deliveryTagIndex != null) {
-                row[data.deliveryTagIndex] = data.amqpTag;
-            }
-
-            // put the row to the output row stream
-            putRow(data.outputRowMeta, row);
 
             // log progress
             if (checkFeedback(getLinesWritten())) {
                 logBasic(String.format("liner %s", getLinesWritten()));
             }
 
-            if ( ! data.isTransactional && ! data.isRequeue && ! data.activeConfirmation) {
-                logDebug("basicAck : " + data.amqpTag);
-                channel.basicAck(data.amqpTag, true);
-                data.ack++;
-            }
-
-            if (data.count >= data.limit) {
-                logBasic(String.format("Message limit %s", data.count));
-                return;
-            }
-
-        } while ( !isStopped());
-    }
-
-    private void flush()
-    {
-        logMinimal("Flush invoked");
-
-        if (data.isConsumer  && ! data.isRequeue && channel.isOpen() ) {
-            try {
-                if ( data.activeConfirmation && data.isTransactional )  { 
-                    flushActiveConfirmation();
-                }
-
-                if ( ! data.activeConfirmation && data.isTransactional )  {
-                    logMinimal("Ack All messages : " + data.amqpTag);
-                    channel.basicAck(data.amqpTag, true);
-                    data.ack = data.count;
-                }
-
-            } catch (IOException ex) {
-                logError(ex.getMessage());
-            } catch (com.rabbitmq.client.AlreadyClosedException ex ) {
-                logError(ex.getMessage());
-            }
+            return true;
         }
 
-        if (data.isProducer && data.isTransactional && data.isTxOpen && channel.isOpen() ) {
-            try {
+        setOutputDone();
 
-                logMinimal("Commit channel transaction");
-
-                channel.txCommit();
-
-                data.isTxOpen = false;
-            } catch (IOException ex) {
-                logError(ex.getMessage());
-            }
-        }
-
-        closeAmqp();
-    }
-
-    private void flushActiveConfirmation() throws IOException
-    {
-        if (data.ackMsgInTransaction != null) {
-            //ack all good
-            logMinimal("Acknowledged messages : " + data.ackMsgInTransaction.size());
-            for (Long ampqTag : data.ackMsgInTransaction )  {    
-                channel.basicAck(ampqTag, false);
-                data.ack++;
-            }
-        }
-
-        if (data.rejectedMsgInTransaction != null) {
-            //reject all with errors
-            logMinimal("Rejected messages  : " + data.rejectedMsgInTransaction.size());
-            for (Long ampqTag : data.rejectedMsgInTransaction ) {
-                channel.basicNack(ampqTag, false, false);
-                data.rejected++;
-            }
-        }
-    }
-
-    private void closeAmqp()
-    {
-        if ( channel != null && channel.isOpen() ) {
-
-            if (data.isProducer && data.isTransactional && data.isTxOpen) {
-                try {
-                    logMinimal("Rollback channel transaction");
-                    channel.txRollback();
-
-                    data.isTxOpen = false;
-                } catch (IOException ex) {
-                    logError(ex.getMessage());
-                }
-            }
-
-            try {
-                logMinimal("Closing AMQP channel");
-                channel.close();
-            } catch (IOException ex) {
-                logError(ex.getMessage());
-            }
-        }
-
-        if ( conn != null && conn.isOpen() ) {
-            try {
-                logMinimal("Closing AMQP connection");
-                conn.close();
-            } catch (IOException ex) {
-                logError(ex.getMessage());
-            }
-        }
-
-        if (data.isConsumer) {
-            final long ack      = data.ack;
-            final long rejected = data.rejected;
-            final long requeue  = (data.count - ack - rejected);
-
-            logMinimal("Queue messages received : ack=" + ack + ", rejected=" + rejected + ", requeue=" + requeue);
-        }
+        return false;
     }
 
     @Override
@@ -431,15 +142,15 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         Integer port    = null;
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
-        String deliveryTagField = environmentSubstitute(meta.getDeliveryTagField());
         String uri      = environmentSubstitute(meta.getUri());
         String host     = environmentSubstitute(meta.getHost());
         String vhost    = environmentSubstitute(meta.getVhost());
         String username = environmentSubstitute(meta.getUsername());
+        String deliveryTagField = environmentSubstitute(meta.getDeliveryTagField());
         String password = decryptPasswordOptionallyEncrypted(environmentSubstitute(meta.getPassword()));
 
         if ( ! Const.isEmpty(meta.getPort())) {
-            port = Integer.parseInt(environmentSubstitute(meta.getPort()));
+            data.port = Integer.parseInt(environmentSubstitute(meta.getPort()));
         }
 
         if (body == null) {
@@ -458,6 +169,13 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.prefetchCount  = meta.getPrefetchCount();
         data.waitTimeout    = meta.getWaitTimeout();
 
+        data.uri       = uri;
+        data.host      = host;
+        data.vhost     = vhost;
+        data.username  = username;
+        data.password  = password;
+
+        data.useSsl            = meta.isUseSsl();
         data.isTransactional   = meta.isTransactional();
         data.isWaitingConsumer = meta.isWaitingConsumer();
         data.isRequeue         = meta.isRequeue();
@@ -465,9 +183,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         data.isProducer        = meta.isProducer();
 
         //Confirmation sniffers
-        data.ackStepName             = environmentSubstitute(meta.getAckStepName());
-        data.ackStepDeliveryTagField = environmentSubstitute(meta.getAckStepDeliveryTagField());
-
+        data.ackStepName                = environmentSubstitute(meta.getAckStepName());
+        data.ackStepDeliveryTagField    = environmentSubstitute(meta.getAckStepDeliveryTagField());
         data.rejectStepName             = environmentSubstitute(meta.getRejectStepName());
         data.rejectStepDeliveryTagField = environmentSubstitute(meta.getRejectStepDeliveryTagField());
 
@@ -494,7 +211,6 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             }
         }
 
-
         if (data.bodyFieldIndex < 0) {
             throw new AMQPException("Unable to retrieve body field : " + body);
         }
@@ -507,161 +223,81 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         logMinimal(getString("AmqpPlugin.Routing.Label")  + " : " + routing);
         logMinimal(getString("AmqpPlugin.Target.Label")   + " : " + data.target);
         logMinimal(getString("AmqpPlugin.Limit.Label")    + " : " + data.limit);
-        logMinimal(getString("AmqpPlugin.UseSsl.Label")   + " : " + meta.isUseSsl());
-
-        if ( ! Const.isEmpty(uri)) {
-            logMinimal(getString("AmqpPlugin.URI.Label")      + " : " + uri);
-
-            factory.setUri(uri);
-        } else {
-            logMinimal(getString("AmqpPlugin.Username.Label") + " : " + username);
-            logDebug(getString("AmqpPlugin.Password.Label") + " : " + password);
-            logMinimal(getString("AmqpPlugin.Host.Label")     + " : " + host);
-            logMinimal(getString("AmqpPlugin.Port.Label")     + " : " + port);
-            logMinimal(getString("AmqpPlugin.Vhost.Label")    + " : " + vhost);
-
-            factory.setHost(host);
-            factory.setPort(port);
-            factory.setUsername(username);
-            factory.setPassword(password);
-
-            if (vhost != null) {
-                factory.setVirtualHost(vhost);
-            }
-
-            if (meta.isUseSsl()) {
-                factory.useSslProtocol();
-            }
-        }
-
-        conn    = factory.newConnection();
-        channel = conn.createChannel();
-        int qos = data.isConsumer ? data.prefetchCount : 0;
-
-        channel.basicQos(qos);
+        logMinimal(getString("AmqpPlugin.UseSsl.Label")   + " : " + data.useSsl);
+        logMinimal(getString("AmqpPlugin.URI.Label")      + " : " + uri);
+        logMinimal(getString("AmqpPlugin.Username.Label") + " : " + username);
+        logDebug(getString("AmqpPlugin.Password.Label")   + " : " + password);
+        logMinimal(getString("AmqpPlugin.Host.Label")     + " : " + host);
+        logMinimal(getString("AmqpPlugin.Port.Label")     + " : " + port);
+        logMinimal(getString("AmqpPlugin.Vhost.Label")    + " : " + vhost);
 
         if ( data.isConsumer && data.isTransactional && data.prefetchCount > 0 ) {
             throw new AMQPException(getString("AmqpPlugin.Error.PrefetchCountAndTransactionalNotSupported"));
         }
 
-        if ( data.isConsumer && data.isRequeue ) {
+        if ( data.isConsumer && data.isRequeue) {
             logMinimal(getString("AmqpPlugin.Info.RequeueDevelopmentUsage"));
         }
 
-        if ( ! conn.isOpen()) {
-            throw new AMQPException("Unable to open a AMQP connection");
+        if  (data.isConsumer && ( ! Const.isEmpty(data.ackStepName) || ! Const.isEmpty(data.rejectStepName))) {
+            // we start active confirmation , need not to Ack messages in batches
+            data.activeConfirmation = true;
         }
 
-        if ( ! channel.isOpen()) {
-            throw new AMQPException("Unable to open an AMQP channel");
-        }
-
-        if (data.isWaitingConsumer) {
-            consumer = new QueueingConsumer(channel) {
-                @Override
-                public void handleCancel(String consumerTag) throws IOException
-                {
-                    logBasic(consumerTag + "Canceled");
-                }
-
-                @Override
-                public void handleShutdownSignal(String consumerTag, ShutdownSignalException sig)
-                {
-                    logDebug(consumerTag + " :SHUTDOWN: " + sig.getMessage());
-                }
-            };
-        }
-
-        if  (data.isConsumer) {
-
-            if ( ! Const.isEmpty(data.ackStepName) || ! Const.isEmpty(data.rejectStepName) )  {
-                // we start active confirmation , need not to Ack messages in batches
-                data.activeConfirmation = true;
-            }
-
-            //bind to step with acknowledge rows on input stream
-            if ( ! Const.isEmpty(data.ackStepName) ) {
-
-                final StepInterface si = getTrans().getStepInterface( data.ackStepName, 0);
-
-                if (si == null) {
-                    throw new KettleException ("Can not find step : " + data.ackStepName );
-                }
-
-                if (getTrans().getStepInterface( data.ackStepName, 1 ) != null) {
-                    throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.ackStepName );
-                }
-
-                si.addRowListener(new ConfirmationRowStepWatcher(data.ackStepDeliveryTagField, ackDelivery));
-
-                if (data.isTransactional) {
-                    data.ackMsgInTransaction = new ArrayList<Long>();
-                }
-            }
-
-            //bind to step with rejected rows on input stream
-            if ( ! Const.isEmpty(data.rejectStepName) ) {
-
-                final StepInterface si = getTrans().getStepInterface( data.rejectStepName, 0 );
-
-                if (si == null) {
-                    throw new KettleException ("Can not find step : " + data.rejectStepName );
-                }
-
-                if (getTrans().getStepInterface( data.rejectStepName, 1 ) != null) {
-                    throw new KettleException ("Only SINGLE INSTANCE Steps supported : " + data.rejectStepName );
-                }
-
-                si.addRowListener(new ConfirmationRowStepWatcher(data.rejectStepDeliveryTagField, rejectDelivery));
-
-                if (data.isTransactional) {
-                    data.rejectedMsgInTransaction = new ArrayList<Long>();
-                }
-            }
-        }
+        processor = factory.processorFor(this, data, meta);
 
         // hook to transListener, to make final flush to transactional case, or in case ack/nack steps should finish.
         if (data.isTransactional || data.activeConfirmation ) {
             getTrans().addTransListener(transListener);
         }
+    }
 
+    private void onSuccess()
+    {
+        logMinimal("On success invoked");
 
-        //Consumer Delcare Queue/Exchanges and Binding
-        if (data.isConsumer && data.isDeclare) {
-            logMinimal(String.format("Declaring Queue '%s' { durable:%s, exclusive:%s, auto_delete:%s}", data.target,  data.isDurable, data.isExclusive, data.isAutodel));
-            channel.queueDeclare(data.target, data.isDurable, data.isExclusive, data.isAutodel, null);
-
-            for (Binding item : data.bindings) {
-                final String queueName    = data.target;
-                final String exchangeName = environmentSubstitute(item.getTarget());
-                final String routingKey   = environmentSubstitute(item.getRouting());
-
-                logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", queueName, exchangeName, routingKey));
-                channel.queueBind(queueName, exchangeName, routingKey);
-            }
+        if (processor == null) {
+            return;
         }
 
-        // Producer Declare
-        if (data.isProducer && data.isDeclare) {
-            logMinimal(String.format("Declaring Exchange '%s' {type:%s, durable:%s, auto_delete:%s}", data.target, data.exchtype, data.isDurable, data.isAutodel));
-            channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);
+        try {
+            processor.onSuccess();
+        } catch (KettleStepException ex) {
+            logError(ex.getMessage());
+        } catch (IOException ex) {
+            logError(ex.getMessage());
+        }
 
-            for (Binding item : data.bindings) {
-                final String exchangeName = data.target;
-                final String targetName   = environmentSubstitute(item.getTarget());
-                final String routingKey   = environmentSubstitute(item.getRouting());
-                final String targetType   = environmentSubstitute(item.getTargetType());
+        this.shutdown();
+    }
 
-                if (AMQPPluginData.TARGET_TYPE_QUEUE.equals(targetType))  {
-                    logMinimal(String.format("Binding Queue '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
-                    channel.queueBind(targetName, exchangeName, routingKey);
+    private void onFailure()
+    {
+        logMinimal("On failure invoked");
 
-                    continue;
-                }
+        if (processor == null) {
+            return;
+        }
 
-                logMinimal(String.format("Binding dest Exchange '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
-                channel.exchangeBind(targetName, exchangeName, routingKey);
-            }
+        try {
+            processor.onFailure();
+        } catch (KettleStepException ex) {
+            logError(ex.getMessage());
+        } catch (IOException ex) {
+            logError(ex.getMessage());
+        }
+
+        this.shutdown();
+    }
+
+    private void shutdown()
+    {
+        try {
+            processor.shutdown();
+        } catch (KettleStepException ex) {
+            logError(ex.getMessage());
+        } catch (IOException ex) {
+            logError(ex.getMessage());
         }
     }
 
@@ -671,10 +307,10 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         meta = (AMQPPluginMeta) smi;
         data = (AMQPPluginData) sdi;
 
-        logDebug("DISPOSE INVOKED");
+        logDebug("Dispose invoked");
 
-        if ( ! data.isTransactional && !data.activeConfirmation ) {
-            flush();
+        if ( ! data.isTransactional && ! data.activeConfirmation ) {
+            onSuccess();
         }
 
         super.dispose(smi, sdi);

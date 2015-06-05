@@ -13,14 +13,20 @@
         <hadoop.version>2.0.0-cdh4.1.1</hadoop.version>
         <kettle.version>5.3.0.0-213</kettle.version>
         <guava.version>14.0.1</guava.version>
-        <skipTests>true</skipTests>
+        <skipTests>false</skipTests>
         <pluginInstallDir>path-to/data-integration/plugins/steps/ic-amqp-plugin</pluginInstallDir>
     </properties>
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.1</version>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>1.9.5</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -198,6 +204,7 @@
                 <configuration>
                     <source>1.6</source>
                     <target>1.6</target>
+                    <compilerArgument>-Xlint:unchecked</compilerArgument>
                     <compilerArgument>-Xlint:deprecation</compilerArgument>
                 </configuration>
             </plugin>

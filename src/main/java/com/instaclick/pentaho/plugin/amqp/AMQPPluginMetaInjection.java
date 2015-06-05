@@ -54,7 +54,6 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
         REJECTSTEPDELIVERYTAG( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.RejectStepDeliveryTag.Label") ),
         ACKSTEPNAME( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.AckStepName.Label") ),
         REJECTSTEPNAME( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.RejectStepName.Label") ),
- 
 
         BINDINGS( ValueMetaInterface.TYPE_NONE, getString("AmqpPlugin.Binding.Label") ),
         BINDING_ROW( ValueMetaInterface.TYPE_NONE, "One binding row" ),
@@ -102,7 +101,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
         Entry[] topEntries = new Entry[] {
             Entry.AMQP_MODE
             , Entry.AMQP_URI
-            , Entry.AMQP_USESSL 
+            , Entry.AMQP_USESSL
             , Entry.AMQP_USERNAME
             , Entry.AMQP_PASSWORD
             , Entry.AMQP_HOST
@@ -174,7 +173,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
                 for ( StepInjectionMetaEntry lookField : lookFields.getDetails() ) {
                     Entry fieldEntry = Entry.findEntry( lookField.getKey() );
                     if ( fieldEntry == Entry.BINDING_ROW ) {
-    
+
                         String bindingTarget = null;
                         String bindingTargetType = null;
                         String bindingRoutingKey = null;
@@ -234,7 +233,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
             case REJECTSTEPDELIVERYTAG:
                 meta.setRejectStepDeliveryTagField( lookValue );
                 break;
- 
+
             case TARGET:
                 meta.setTarget( lookValue );
                 break;

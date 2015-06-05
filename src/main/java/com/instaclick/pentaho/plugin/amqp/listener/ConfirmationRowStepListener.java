@@ -1,4 +1,4 @@
-package com.instaclick.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp.listener;
 
 import java.io.IOException;
 import org.pentaho.di.trans.step.RowListener;
@@ -6,21 +6,21 @@ import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.exception.KettleValueException;
 
-public class ConfirmationRowStepWatcher implements RowListener
+public class ConfirmationRowStepListener implements RowListener
 {
     int rowsRead = 0;
     final String deliveryTagName;
-    final  AMQPConfirmationAck ackDelegate;
-    final  AMQPConfirmationReject rejectDelegate;
+    final ConfirmationAckListener ackDelegate;
+    final ConfirmationRejectListener rejectDelegate;
 
-    public ConfirmationRowStepWatcher(final String deliveryTagName, final AMQPConfirmationAck ackDelegate)
+    public ConfirmationRowStepListener(final String deliveryTagName, final ConfirmationAckListener ackDelegate)
     {
         this.deliveryTagName = deliveryTagName;
         this.ackDelegate     = ackDelegate;
         this.rejectDelegate  = null;
     }
 
-    public ConfirmationRowStepWatcher(final String deliveryTagName, final AMQPConfirmationReject rejectDelegate)
+    public ConfirmationRowStepListener(final String deliveryTagName, final ConfirmationRejectListener rejectDelegate)
     {
         this.deliveryTagName = deliveryTagName;
         this.rejectDelegate  = rejectDelegate;

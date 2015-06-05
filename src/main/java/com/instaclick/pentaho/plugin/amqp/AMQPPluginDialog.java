@@ -165,7 +165,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formDeliveryTagLabel;
     private FormData formDeliveryTagText;
 
-    
+
     private Label labelTransactional;
     private Button checkTransactional;
     private FormData formTransactionalLabel;
@@ -176,8 +176,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData     formBindingLabel;
     private FormData     formBindingText;
 
-    
-    
     private Label labelAckStepName;
     private TextVar textAckStepName;
     private FormData formAckStepNameLabel;
@@ -198,8 +196,6 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formRejectStepDeliveryTagLabel;
     private FormData formRejectStepDeliveryTagText;
 
-    
-    
     private static final List<String> modes = new ArrayList<String>(Arrays.asList(new String[] {
         AMQPPluginData.MODE_CONSUMER,
         AMQPPluginData.MODE_PRODUCER
@@ -289,7 +285,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         tableBinding.setColumnText(1,getString("AmqpPlugin.Binding.Column.Target.ProducerMode"));
         tableBinding.setColumnText(2,getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"));
 
-    tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"), ColumnInfo.COLUMN_TYPE_CCOMBO,target_types.toArray(new String[target_types.size()]), true));
+        tableBinding.setColumnInfo(1,new ColumnInfo(getString("AmqpPlugin.Binding.Column.TargetType.ProducerMode"), ColumnInfo.COLUMN_TYPE_CCOMBO,target_types.toArray(new String[target_types.size()]), true));
     }
 
     private void enableConsumerFields()
@@ -628,7 +624,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textDeliveryTagField.setLayoutData(formDeliveryTagText);
 
-        
+
         // Target line
         labelTarget = new Label(wConnectionComp, SWT.RIGHT);
         labelTarget.setText(getString("AmqpPlugin.Target.Label"));
@@ -1056,7 +1052,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         // / END OF Condition TAB
         // ///////////////////////////////////////////////////////////
 
-        
+
         // ////////////////////////
         // START OF Confirmation TAB///
         wConfirmationTab = new CTabItem( wTabFolder, SWT.NONE );
@@ -1070,7 +1066,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         confirmationLayout.marginHeight = 3;
         wConfirmationComp.setLayout( confirmationLayout );
 
-        
+
 
         // AckStepName
         labelAckStepName = new Label(wConfirmationComp, SWT.RIGHT);
@@ -1357,7 +1353,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setTarget(getFieldText(textTarget));
         input.setBodyField(getFieldText(textBodyField));
         input.setDeliveryTagField(getFieldText(textDeliveryTagField));
-        
+
         input.setUsername(getFieldText(textUsername));
         input.setPassword(getFieldText(textPassword));
         input.setHost(getFieldText(textHost));
@@ -1377,13 +1373,13 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setRequeue(checkRequeue.getSelection());
         input.setAutodel(checkAutodel.getSelection());
 
-        
+
         input.setAckStepName(getFieldText(textAckStepName));
         input.setAckStepDeliveryTagField(getFieldText(textAckStepDeliveryTagField));
         input.setRejectStepName(getFieldText(textRejectStepName));
         input.setRejectStepDeliveryTagField(getFieldText(textRejectStepDeliveryTagField));
 
-        
+
         input.setMode(getFieldText(comboMode));
         input.setExchtype(getFieldText(comboExchtype));
         input.clearBindings();

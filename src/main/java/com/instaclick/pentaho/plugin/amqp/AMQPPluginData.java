@@ -4,9 +4,7 @@ import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 import java.util.List;
-import java.util.ArrayList;
-import org.pentaho.di.trans.step.StepInterface;
-
+import static org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted;
 
 public class AMQPPluginData extends BaseStepData implements StepDataInterface
 {
@@ -43,10 +41,18 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public long amqpTag;
     public Long limit;
     public Long waitTimeout;
-    public int prefetchCount=0;
-    public long count = 0;
-    public long ack = 0;
-    public long rejected = 0;
+    public int prefetchCount = 0;
+    public long count        = 0;
+    public long ack          = 0;
+    public long rejected     = 0;
+
+    public String uri;
+    public String host;
+    public int port;
+    public String vhost;
+    public String username;
+    public String password;
+    public boolean useSsl = false;
 
     // Delayed confirmation realted
     public Integer deliveryTagIndex = null;

@@ -1,8 +1,8 @@
-package com.instaclick.pentaho.plugin.amqp;
+package com.instaclick.pentaho.plugin.amqp.listener;
 
 import java.io.IOException;
 
-public interface AMQPConfirmationReject
+public interface ConfirmationRejectListener
 {
     public void rejectDelivery(long deliveryTag) throws IOException;
 }
