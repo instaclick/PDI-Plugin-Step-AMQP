@@ -111,11 +111,11 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         private final String routing;
         private final String target_type;
 
-        Binding(String target, String target_type, String routing)
+        Binding(final String target, final String target_type, final String routing)
         {
-            this.target = target;
-        this.target_type = target_type;
-            this.routing = routing;
+            this.target      = target;
+            this.routing     = routing;
+            this.target_type = target_type;
         }
 
         public String getTarget()

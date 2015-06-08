@@ -7,10 +7,6 @@ import com.instaclick.pentaho.plugin.amqp.initializer.ActiveConvirmationInitiali
 import com.instaclick.pentaho.plugin.amqp.initializer.ConsumerDeclareInitializer;
 import com.instaclick.pentaho.plugin.amqp.initializer.ProducerDeclareInitializer;
 import com.rabbitmq.client.Channel;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import org.junit.Test;
 import static org.junit.Assert.*;

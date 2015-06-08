@@ -2,7 +2,7 @@ package com.instaclick.pentaho.plugin.amqp.initializer;
 
 import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
 import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
-import com.instaclick.pentaho.plugin.amqp.AMQPPluginMeta;
+import com.instaclick.pentaho.plugin.amqp.AMQPPluginMeta.Binding;
 import com.rabbitmq.client.Channel;
 import java.io.IOException;
 
@@ -16,7 +16,7 @@ public class ProducerDeclareInitializer implements Initializer
         plugin.logMinimal(String.format("Declaring Exchange '%s' {type:%s, durable:%s, auto_delete:%s}", data.target, data.exchtype, data.isDurable, data.isAutodel));
         channel.exchangeDeclare(data.target, data.exchtype, data.isDurable, data.isAutodel, null);
 
-        for (AMQPPluginMeta.Binding item : data.bindings) {
+        for (final Binding item : data.bindings) {
             final String exchangeName = data.target;
             final String targetName   = plugin.environmentSubstitute(item.getTarget());
             final String routingKey   = plugin.environmentSubstitute(item.getRouting());
@@ -29,7 +29,7 @@ public class ProducerDeclareInitializer implements Initializer
                 continue;
             }
 
-            plugin.logMinimal(String.format("Binding dest Exchange '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
+            plugin.logMinimal(String.format("Binding Exchange '%s' to Exchange '%s' using routing key '%s'", targetName, exchangeName, routingKey));
             channel.exchangeBind(targetName, exchangeName, routingKey);
         }
     }

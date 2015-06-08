@@ -8,7 +8,6 @@ import org.pentaho.di.core.exception.KettleValueException;
 
 public class ConfirmationRowStepListener implements RowListener
 {
-    int rowsRead = 0;
     final String deliveryTagName;
     final ConfirmationAckListener ackDelegate;
     final ConfirmationRejectListener rejectDelegate;
@@ -28,12 +27,11 @@ public class ConfirmationRowStepListener implements RowListener
     }
 
     @Override
-    public void rowReadEvent(RowMetaInterface rowMeta, Object[] row) throws KettleStepException
+    public void rowReadEvent(final RowMetaInterface rowMeta, final Object[] row) throws KettleStepException
     {
         try {
-            final Long deliveryTag = rowMeta.getInteger(row, rowMeta.indexOfValue(deliveryTagName));
-
-            rowsRead++;
+            final Integer indexValue = rowMeta.indexOfValue(deliveryTagName);
+            final Long deliveryTag   = rowMeta.getInteger(row, indexValue);
 
             if (ackDelegate != null) {
                 synchronized (this) {
@@ -55,13 +53,13 @@ public class ConfirmationRowStepListener implements RowListener
     }
 
     @Override
-    public void rowWrittenEvent(RowMetaInterface rowMeta, Object[] row)
+    public void rowWrittenEvent(final RowMetaInterface rowMeta, final Object[] row)
     {
 
     }
 
     @Override
-    public void errorRowWrittenEvent(RowMetaInterface rowMeta, Object[] row)
+    public void errorRowWrittenEvent(final RowMetaInterface rowMeta, final Object[] row)
     {
 
     }
