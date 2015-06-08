@@ -157,15 +157,15 @@
                         <phase>package</phase>
                         <configuration>
                             <target name="package-amqp-plugin">
-                                <delete dir="${project.plugin.deploy}/ic-amqp-plugin"/>
-                                <mkdir dir="${project.plugin.deploy}/ic-amqp-plugin"/>
+                                <delete dir="${project.plugin.deploy}/ic-amqp-plugin" />
+                                <mkdir dir="${project.plugin.deploy}/ic-amqp-plugin" />
                                 <copy tofile="${project.plugin.deploy}/ic-amqp-plugin/ic-amqp-plugin.jar" file="${project.build.directory}/${project.build.finalName}-dep.jar" />
                                 <copy todir="${project.plugin.deploy}/ic-amqp-plugin">
                                     <fileset dir="${basedir}/src/main/resources">
                                         <include name="**/*.*" />
                                     </fileset>
                                 </copy>
-                                <zip destfile="${project.build.directory}/ic-amqp-plugin-pdi-${project.version}.zip" basedir="${project.plugin.deploy}"/>
+                                <zip destfile="${project.build.directory}/ic-amqp-plugin-pdi-${project.version}.zip" basedir="${project.plugin.deploy}" />
                             </target>
                         </configuration>
                         <goals>
@@ -177,7 +177,7 @@
                         <phase>install</phase>
                         <configuration>
                             <target name="install-amqp-plugin">
-                                <delete dir="${pluginInstallDir}"/>
+                                <delete dir="${pluginInstallDir}" />
                                 <mkdir dir="${pluginInstallDir}" />
                                 <copy todir="${pluginInstallDir}">
                                     <fileset dir="${project.plugin.deploy}" includes="**/*.*" />
@@ -208,6 +208,27 @@
                     <compilerArgument>-Xlint:deprecation</compilerArgument>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.7</version>
+            </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.7</version>
+                <configuration>
+                    <check />
+                    <formats>
+                        <format>html</format>
+                        <format>xml</format>
+                    </formats>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>

@@ -78,6 +78,9 @@ abstract class BaseConsumerProcessor extends BaseProcessor
 
         // put the row to the output row stream
         plugin.putRow(data.outputRowMeta, row);
+        plugin.incrementLinesInput();
+
+        data.count ++;
 
         if ( ! data.isTransactional && ! data.isRequeue && ! data.activeConfirmation) {
             plugin.logDebug("basicAck : " + data.amqpTag);
@@ -95,24 +98,28 @@ abstract class BaseConsumerProcessor extends BaseProcessor
 
     protected abstract boolean consume() throws IOException, KettleStepException;
 
-    private void flushActiveConfirmation() throws IOException
+    protected void flushActiveConfirmation() throws IOException
     {
         if (data.ackMsgInTransaction != null) {
-            //ack all good
-            plugin.logMinimal("Acknowledged messages : " + data.ackMsgInTransaction.size());
-            for (Long ampqTag : data.ackMsgInTransaction )  {
-                channel.basicAck(ampqTag, false);
+            // Ack all good
+            for (final Long tag : data.ackMsgInTransaction)  {
+                channel.basicAck(tag, false);
                 data.ack++;
             }
+
+            plugin.logMinimal("Acknowledged messages : " + data.ackMsgInTransaction.size());
+            data.ackMsgInTransaction.clear();
         }
 
         if (data.rejectedMsgInTransaction != null) {
-            //reject all with errors
-            plugin.logMinimal("Rejected messages  : " + data.rejectedMsgInTransaction.size());
-            for (Long ampqTag : data.rejectedMsgInTransaction ) {
-                channel.basicNack(ampqTag, false, false);
+            // Reject all with errors
+            for (final Long tag : data.rejectedMsgInTransaction) {
+                channel.basicNack(tag, false, false);
                 data.rejected++;
             }
+
+            plugin.logMinimal("Rejected messages : " + data.rejectedMsgInTransaction.size());
+            data.rejectedMsgInTransaction.clear();
         }
     }
 }

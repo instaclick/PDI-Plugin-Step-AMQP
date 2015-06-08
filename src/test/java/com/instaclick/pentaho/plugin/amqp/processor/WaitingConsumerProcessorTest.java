@@ -46,7 +46,7 @@ public class WaitingConsumerProcessorTest
         final long tag                          = 1L;
         final String routingKey                 = "#";
         final byte[] body                       = new byte[0];
-        final Envelope envelope                 = mock(Envelope.class);
+        final Envelope envelope                 = mock(Envelope.class); 
         final Delivery delivery                 = mock(Delivery.class);
         final QueueingConsumer consumer         = mock(QueueingConsumer.class);
         final WaitingConsumerProcessor instance = new WaitingConsumerProcessor(channel, plugin, data, new ArrayList<Initializer>(0), consumer);
@@ -76,10 +76,7 @@ public class WaitingConsumerProcessorTest
         assertTrue(instance.consume());
         assertFalse(instance.consume());
 
-        verify(plugin, times(1)).incrementLinesInput();
         verify(consumer, times(2)).nextDelivery(eq(data.waitTimeout));
-
-        assertEquals(1, data.count);
         assertEquals(tag, data.amqpTag);
     }
 }

@@ -32,9 +32,6 @@ public class BasicConsumerProcessor extends BaseConsumerProcessor
         data.routing = envelope.getRoutingKey();
         data.body    = new String(body);
         data.amqpTag = tag;
-        data.count ++;
-
-        this.plugin.incrementLinesInput();
 
         return true;
     }

@@ -63,9 +63,6 @@ public class WaitingConsumerProcessor extends BaseConsumerProcessor
         data.routing = envelope.getRoutingKey();
         data.body    = new String(body);
         data.amqpTag = tag;
-        data.count ++;
-
-        plugin.incrementLinesInput();
 
         return true;
     }

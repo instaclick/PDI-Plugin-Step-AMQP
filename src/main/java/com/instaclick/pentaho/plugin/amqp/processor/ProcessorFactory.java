@@ -23,7 +23,7 @@ public class ProcessorFactory
 {
     private final ConnectionFactory factory = new ConnectionFactory();
 
-    private Connection connectionFor(final AMQPPluginData data) throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException
+    protected Connection connectionFor(final AMQPPluginData data) throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException
     {
         if ( ! Const.isEmpty(data.uri)) {
             factory.setUri(data.uri);
@@ -47,7 +47,7 @@ public class ProcessorFactory
         return factory.newConnection();
     }
 
-    private Channel channelFor(final AMQPPluginData data) throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException
+    protected Channel channelFor(final AMQPPluginData data) throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException
     {
         final Connection conn = connectionFor(data);
         final Channel channel = conn.createChannel();
