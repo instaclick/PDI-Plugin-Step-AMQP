@@ -32,6 +32,17 @@ public class WaitingConsumerProcessor extends BaseConsumerProcessor
         super(channel, plugin, data, initializers);
     }
 
+
+    @Override   
+    public void start() throws KettleStepException, IOException
+    {
+        super.start();
+        plugin.logMinimal("Waiting for messages : " + data.waitTimeout);
+        channel.basicConsume(data.target, false, consumer);
+    }
+
+
+
     @Override
     protected boolean consume() throws IOException, KettleStepException
     {
