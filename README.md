@@ -1,6 +1,8 @@
 IC AMQP Plugin
 ==============
 
+[![Build Status](https://travis-ci.org/instaclick/PDI-Plugin-Step-AMQP.svg?branch=2.0.x)](https://travis-ci.org/instaclick/PDI-Plugin-Step-AMQP)
+
 ## Compatible with PDI/Kettle 5.x 
 
 Building
