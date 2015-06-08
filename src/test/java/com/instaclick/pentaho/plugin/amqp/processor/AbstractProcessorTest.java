@@ -5,11 +5,14 @@ import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
 import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
 import com.rabbitmq.client.Channel;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import static org.mockito.Mockito.*;
+import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowMetaInterface;
 
 public class AbstractProcessorTest
@@ -111,11 +114,40 @@ public class AbstractProcessorTest
         verify(plugin, never()).putError(any(RowMetaInterface.class), any(Object[].class), any(Long.class), any(String.class), any(String.class), any(String.class));
     }
 
+    @Test
+    public void testShutdownClosesChannel() throws IOException
+    {
+        final BaseProcessor processor = new AbstractProcessorImpl(channel, plugin, data);
+
+        processor.shutdown();
+
+        verify(channel, times(1)).close();
+    }
+
+    @Test
+    public void testStartInvockInitializers() throws IOException, KettleStepException
+    {
+        final Initializer initializer        = mock(Initializer.class);
+        final List<Initializer> initializers = new ArrayList<Initializer>();
+        final BaseProcessor processor        = new AbstractProcessorImpl(channel, plugin, data, initializers);
+
+        initializers.add(initializer);
+
+        processor.start();
+
+        verify(initializer, times(1)).initialize(eq(channel), eq(plugin), eq(data));
+    }
+
     public class AbstractProcessorImpl extends BaseProcessor
     {
         public AbstractProcessorImpl(final Channel channel, final AMQPPlugin plugin, final AMQPPluginData data)
         {
-            super(channel, plugin, data, new ArrayList<Initializer>(0));
+            this(channel, plugin, data, new ArrayList<Initializer>(0));
+        }
+
+        public AbstractProcessorImpl(final Channel channel, final AMQPPlugin plugin, final AMQPPluginData data, final List<Initializer> initializers)
+        {
+            super(channel, plugin, data, initializers);
         }
 
         @Override

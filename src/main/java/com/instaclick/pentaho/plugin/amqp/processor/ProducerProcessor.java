@@ -50,7 +50,7 @@ public class ProducerProcessor extends BaseProcessor
     @Override
     public void onSuccess() throws IOException
     {
-        if ( ! data.isTransactional || ! data.isTxOpen) {
+        if ( ! data.isTxOpen) {
             return;
         }
 
@@ -63,11 +63,12 @@ public class ProducerProcessor extends BaseProcessor
     @Override
     public void onFailure() throws IOException
     {
-        if ( ! data.isTransactional || ! data.isTxOpen) {
+        if ( ! data.isTxOpen) {
             return;
         }
 
         channel.txRollback();
+
         data.isTxOpen = false;
     }
 }

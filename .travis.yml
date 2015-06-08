@@ -1,6 +1,10 @@
 language: java
 
-install: mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin -DskipTests=true -B -V clean
-script: mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin test
-# coveralls
-# after_success: mvn clean cobertura:cobertura coveralls:cobertura
+install:
+  - mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin dependency:resolve
+
+script:
+  - mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin test
+
+# after_success:
+#  -  mvn clean cobertura:cobertura coveralls:cobertura
