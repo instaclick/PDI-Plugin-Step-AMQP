@@ -6,5 +6,5 @@ install:
 script:
   - mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin test
 
-# after_success:
-#  -  mvn clean cobertura:cobertura coveralls:cobertura
+after_success:
+  - mvn clean cobertura:cobertura coveralls:report
