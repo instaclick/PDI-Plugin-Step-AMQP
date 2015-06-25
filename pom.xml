@@ -165,7 +165,8 @@
                                         <include name="**/*.*" />
                                     </fileset>
                                 </copy>
-                                <zip destfile="${project.build.directory}/ic-amqp-plugin-pdi-${project.version}.zip" basedir="${project.plugin.deploy}" />
+                                <zip destfile="${project.build.directory}/ic-amqp-plugin-${project.version}.zip" basedir="${project.plugin.deploy}" />
+                                <copy tofile="${project.build.directory}/ic-amqp-plugin.zip" file="${project.build.directory}/ic-amqp-plugin-${project.version}.zip" />
                             </target>
                         </configuration>
                         <goals>

@@ -1,10 +1,18 @@
 language: java
 
 install:
-  - mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin dependency:resolve
+    - mvn -DskipTests=true dependency:resolve
 
 script:
-  - mvn -DpdiInstall=false -DpdiInstallDir=./target/pdi/plugins/steps/ic-riak-plugin test
+    - mvn clean test
 
 after_success:
-  - mvn clean cobertura:cobertura coveralls:report
+    - mvn -DskipTests=true clean package
+
+deploy:
+    provider: releases
+    api_key: $GITHUB_OAUTH_TOKEN
+    file: ./target/ic-amqp-plugin.zip
+    skip_cleanup: true
+    on:
+        tags: true
