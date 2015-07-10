@@ -15,6 +15,7 @@ import org.pentaho.di.core.exception.KettleStepException;
 public class WaitingConsumerProcessor extends BaseConsumerProcessor
 {
     final QueueingConsumer consumer;
+    String consumerTag;
 
     public WaitingConsumerProcessor(final Channel channel, final AMQPPlugin plugin, final AMQPPluginData data, final List<Initializer> initializers, final QueueingConsumer consumer)
     {
@@ -34,8 +35,16 @@ public class WaitingConsumerProcessor extends BaseConsumerProcessor
         super.start();
 
         plugin.logMinimal("Waiting for messages : " + data.waitTimeout);
-        channel.basicConsume(data.target, false, consumer);
+        consumerTag = channel.basicConsume(data.target, false, consumer);
     }
+
+    @Override
+    public void cancel() throws IOException
+    {
+        plugin.logBasic("HAVE TO CANCEL waiting mode.");
+        channel.basicCancel(consumerTag);
+    }
+
 
     @Override
     protected boolean consume() throws IOException, KettleStepException
@@ -73,7 +82,7 @@ public class WaitingConsumerProcessor extends BaseConsumerProcessor
             @Override
             public void handleCancel(String consumerTag) throws IOException
             {
-                plugin.logBasic(consumerTag + "Canceled");
+                plugin.logBasic(consumerTag + " Canceled");
             }
 
             @Override

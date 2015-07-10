@@ -88,4 +88,11 @@ abstract class BaseProcessor implements Processor
             initializer.initialize(channel, plugin, data);
         }
     }
+
+    @Override
+    public void cancel() throws IOException
+    {
+    }
+
+
 }
