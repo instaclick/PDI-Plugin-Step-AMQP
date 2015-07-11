@@ -318,7 +318,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
     }
 
     @Override
-    public void stopRunning( StepMetaInterface stepMetaInterface, StepDataInterface stepDataInterface ) throws KettleException {
+    public void stopRunning( StepMetaInterface smi, StepDataInterface sdi ) throws KettleException {
         try {
             processor.cancel();;
         } catch (KettleStepException ex) {
@@ -326,6 +326,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         } catch (IOException ex) {
             logError(ex.getMessage());
         }
+        
+        super.stopRunning(smi, sdi);
     }
 
 }
