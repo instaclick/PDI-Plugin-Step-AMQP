@@ -150,7 +150,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         String password = decryptPasswordOptionallyEncrypted(environmentSubstitute(meta.getPassword()));
 
         if ( ! Const.isEmpty(meta.getPort())) {
-            data.port = Integer.parseInt(environmentSubstitute(meta.getPort()));
+            port = Integer.parseInt(environmentSubstitute(meta.getPort()));
         }
 
         if (body == null) {
@@ -171,6 +171,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         data.uri       = uri;
         data.host      = host;
+        data.port      = port;
         data.vhost     = vhost;
         data.username  = username;
         data.password  = password;
@@ -315,4 +316,18 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         super.dispose(smi, sdi);
     }
+
+    @Override
+    public void stopRunning( StepMetaInterface smi, StepDataInterface sdi ) throws KettleException {
+        try {
+            processor.cancel();;
+        } catch (KettleStepException ex) {
+            logError(ex.getMessage());
+        } catch (IOException ex) {
+            logError(ex.getMessage());
+        }
+        
+        super.stopRunning(smi, sdi);
+    }
+
 }

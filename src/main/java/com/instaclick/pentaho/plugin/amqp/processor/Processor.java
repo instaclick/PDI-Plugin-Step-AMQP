@@ -10,4 +10,5 @@ public interface Processor
     public void shutdown() throws KettleStepException, IOException;
     public void onSuccess() throws KettleStepException, IOException;
     public void onFailure() throws KettleStepException, IOException;
+    public void cancel() throws KettleStepException, IOException;
 }

@@ -1,3 +1,9 @@
+2.3.0
+* reafctoring
+* fix lost setting port value
+
+
+
 2.2.1
 * add Confirmation Tab
 * add Confirmation row listeners. Listen input of ACK and REJECT steps for deliverytags and Ack, Reject them accordingly
