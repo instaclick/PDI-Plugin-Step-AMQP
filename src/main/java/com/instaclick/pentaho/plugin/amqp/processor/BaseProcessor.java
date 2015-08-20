@@ -78,7 +78,9 @@ abstract class BaseProcessor implements Processor
     @Override
     public void shutdown() throws IOException
     {
-        channel.close();
+        if ( channel.isOpen() ) {
+            channel.close();
+        }
     }
 
     @Override
