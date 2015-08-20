@@ -119,7 +119,7 @@ public class AbstractProcessorTest
     {
         final BaseProcessor processor = new AbstractProcessorImpl(channel, plugin, data);
 
-	when(channel.isOpen()).thenReturn(true);
+        when(channel.isOpen()).thenReturn(true);
         processor.shutdown();
         verify(channel, times(1)).close();
     }
