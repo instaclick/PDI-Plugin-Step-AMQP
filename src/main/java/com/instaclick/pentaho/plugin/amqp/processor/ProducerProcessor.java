@@ -36,7 +36,7 @@ public class ProducerProcessor extends BaseProcessor
             : "";
 
         // publish the current message
-        channel.basicPublish(data.target, data.routing, null, data.body.getBytes());
+        channel.basicPublish(data.target, data.routing, null, data.body.getBytes("UTF-8"));
 
         // put the row to the output row stream
         plugin.putRow(data.outputRowMeta, r);
