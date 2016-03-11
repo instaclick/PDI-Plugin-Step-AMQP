@@ -139,7 +139,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
         // use meta.getFields() to change it, so it reflects the output row structure
         meta.getFields(rowMeta, getStepname(), null, null, this, repository, metaStore);
 
-        Integer port    = null;
+        int port = 0;
         String body     = environmentSubstitute(meta.getBodyField());
         String routing  = environmentSubstitute(meta.getRouting());
         String uri      = environmentSubstitute(meta.getUri());
@@ -157,7 +157,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             throw new AMQPException("Unable to retrieve field : " + meta.getBodyField());
         }
 
-        if ((username == null || password == null || host == null || port == null) && (uri == null)) {
+        if ((username == null || password == null || host == null || port == 0) && (uri == null)) {
             throw new AMQPException("Unable to retrieve connection information");
         }
 
@@ -216,8 +216,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             throw new AMQPException("Unable to retrieve body field : " + body);
         }
 
-        if (data.target == null) {
-            throw new AMQPException("Unable to retrieve queue/exchange name");
+        if (data.isConsumer && data.target == null) {
+            throw new AMQPException("Unable to retrieve queue name");
         }
 
         logMinimal(getString("AmqpPlugin.Body.Label")     + " : " + body);

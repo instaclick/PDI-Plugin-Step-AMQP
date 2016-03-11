@@ -1390,7 +1390,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
             return;
         }
 
-        if (Const.isEmpty(input.getTarget())) {
+        if (input.isConsumer() && Const.isEmpty(input.getTarget())) {
             textTarget.setFocus();
             return;
         }
