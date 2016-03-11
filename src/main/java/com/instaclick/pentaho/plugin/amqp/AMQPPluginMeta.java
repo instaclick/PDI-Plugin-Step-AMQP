@@ -669,7 +669,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         }
 
         if (Const.isEmpty(target) && AMQPPluginData.MODE_PRODUCER.equals(mode)) {
-            target = "exchange_name";
+            target = "";
         }
 
         return target;

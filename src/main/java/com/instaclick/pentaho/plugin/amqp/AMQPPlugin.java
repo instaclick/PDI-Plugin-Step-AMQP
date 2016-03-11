@@ -216,8 +216,8 @@ public class AMQPPlugin extends BaseStep implements StepInterface
             throw new AMQPException("Unable to retrieve body field : " + body);
         }
 
-        if (data.target == null) {
-            throw new AMQPException("Unable to retrieve queue/exchange name");
+        if (data.isConsumer && data.target == null) {
+            throw new AMQPException("Unable to retrieve queue name");
         }
 
         logMinimal(getString("AmqpPlugin.Body.Label")     + " : " + body);
