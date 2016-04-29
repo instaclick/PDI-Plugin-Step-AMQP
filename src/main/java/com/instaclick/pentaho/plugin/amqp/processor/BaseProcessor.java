@@ -1,12 +1,14 @@
 package com.instaclick.pentaho.plugin.amqp.processor;
 
-import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
 import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
+import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import org.pentaho.di.core.exception.KettleStepException;
+
 import java.io.IOException;
 import java.util.List;
-import org.pentaho.di.core.exception.KettleStepException;
 
 abstract class BaseProcessor implements Processor
 {
@@ -79,7 +81,14 @@ abstract class BaseProcessor implements Processor
     public void shutdown() throws IOException
     {
         if (channel.isOpen()) {
-            channel.getConnection().close();
+            channel.close();
+        }
+
+        if (channel != null) {
+          Connection connection = channel.getConnection();
+          if (connection.isOpen()) {
+            connection.close();
+          }
         }
     }
 
