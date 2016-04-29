@@ -79,7 +79,7 @@ abstract class BaseProcessor implements Processor
     public void shutdown() throws IOException
     {
         if (channel.isOpen()) {
-            channel.close();
+            channel.getConnection().close();
         }
     }
 
