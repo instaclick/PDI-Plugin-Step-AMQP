@@ -121,7 +121,7 @@ public class AbstractProcessorTest
 
         when(channel.isOpen()).thenReturn(true);
         processor.shutdown();
-        verify(channel, times(1)).close();
+        verify(channel, times(1)).getConnection();
     }
 
     @Test
