@@ -1,23 +1,21 @@
 package com.instaclick.pentaho.plugin.amqp;
 
-import java.io.IOException;
-import org.pentaho.di.core.exception.KettleException;
-import org.pentaho.di.core.exception.KettleStepException;
-import org.pentaho.di.trans.Trans;
-import org.pentaho.di.trans.TransMeta;
-import org.pentaho.di.trans.step.BaseStep;
-import org.pentaho.di.trans.step.StepDataInterface;
-import org.pentaho.di.trans.step.StepInterface;
-import org.pentaho.di.trans.step.StepMeta;
-import org.pentaho.di.trans.step.StepMetaInterface;
-import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
 import com.instaclick.pentaho.plugin.amqp.processor.Processor;
 import com.instaclick.pentaho.plugin.amqp.processor.ProcessorFactory;
-import static org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted;
 import org.pentaho.di.core.Const;
+import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowMeta;
-import org.pentaho.di.trans.TransListener;
 import org.pentaho.di.core.row.RowMetaInterface;
+import org.pentaho.di.trans.Trans;
+import org.pentaho.di.trans.TransListener;
+import org.pentaho.di.trans.TransMeta;
+import org.pentaho.di.trans.step.*;
+
+import java.io.IOException;
+
+import static com.instaclick.pentaho.plugin.amqp.Messages.getString;
+import static org.pentaho.di.core.encryption.KettleTwoWayPasswordEncoder.decryptPasswordOptionallyEncrypted;
 
 public class AMQPPlugin extends BaseStep implements StepInterface
 {
@@ -171,7 +169,9 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         data.uri       = uri;
         data.host      = host;
-        data.port      = port;
+        if (port != null) {
+            data.port = port;
+        }
         data.vhost     = vhost;
         data.username  = username;
         data.password  = password;

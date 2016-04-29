@@ -1,30 +1,36 @@
 
 package com.instaclick.pentaho.plugin.amqp.processor;
 
-import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
 import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
+import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import org.junit.Before;
+import org.junit.Test;
+import org.pentaho.di.core.exception.KettleStepException;
+import org.pentaho.di.core.row.RowMetaInterface;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Test;
-import static org.junit.Assert.*;
-import org.junit.Before;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.*;
-import org.pentaho.di.core.exception.KettleStepException;
-import org.pentaho.di.core.row.RowMetaInterface;
 
 public class AbstractProcessorTest
 {
     AMQPPluginData data;
     AMQPPlugin plugin;
     Channel channel;
+    Connection connection;
 
     @Before
     public void setUp()
     {
         channel     = mock(Channel.class, RETURNS_MOCKS);
+        connection = mock(Connection.class, RETURNS_MOCKS);
         data        = mock(AMQPPluginData.class);
         plugin      = mock(AMQPPlugin.class);
     }
@@ -120,8 +126,11 @@ public class AbstractProcessorTest
         final BaseProcessor processor = new AbstractProcessorImpl(channel, plugin, data);
 
         when(channel.isOpen()).thenReturn(true);
+        when(channel.getConnection()).thenReturn(connection);
+        when(connection.isOpen()).thenReturn(true);
         processor.shutdown();
-        verify(channel, times(1)).close();
+        verify(channel, times(1)).getConnection();
+        verify(connection, times(1)).close();
     }
 
     @Test
