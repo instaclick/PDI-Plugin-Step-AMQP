@@ -30,6 +30,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
 
         BODY( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Body.Label") ),
         DELIVERYTAG( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.DeliveryTag.Label") ),
+        CONTENTTYPE( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.ContentType.Label") ),
         TARGET( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Target.Label") ),
         ROUTING( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Routing.Label") ),
         LIMIT( ValueMetaInterface.TYPE_STRING, getString("AmqpPlugin.Limit.Label") ),
@@ -108,6 +109,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
             , Entry.AMQP_PORT
             , Entry.AMQP_VHOST
             , Entry.BODY
+            , Entry.CONTENTTYPE
             , Entry.DELIVERYTAG
             , Entry.TARGET
             , Entry.ROUTING
@@ -217,6 +219,9 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
             case BODY:
                 meta.setBodyField( lookValue );
                 break;
+            case CONTENTTYPE:
+                meta.setContentTypeField( lookValue );
+                break;
             case DELIVERYTAG:
                 meta.setDeliveryTagField( lookValue );
                 break;
@@ -321,6 +326,7 @@ public class AMQPPluginMetaInjection implements StepMetaInjectionInterface {
         list.add( StepInjectionUtil.getEntry( Entry.AMQP_URI, meta.getUri() ) );
 
         list.add( StepInjectionUtil.getEntry( Entry.BODY, meta.getBodyField() ) );
+        list.add( StepInjectionUtil.getEntry( Entry.CONTENTTYPE, meta.getContentTypeField() ) );
         list.add( StepInjectionUtil.getEntry( Entry.DELIVERYTAG, meta.getDeliveryTagField() ) );
         list.add( StepInjectionUtil.getEntry( Entry.TARGET, meta.getTarget() ) );
         list.add( StepInjectionUtil.getEntry( Entry.ROUTING, meta.getRouting() ) );

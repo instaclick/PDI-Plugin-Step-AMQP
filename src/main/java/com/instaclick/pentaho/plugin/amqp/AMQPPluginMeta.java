@@ -37,6 +37,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 {
     private static final String FIELD_TRANSACTIONAL = "transactional";
     private static final String FIELD_BODY_FIELD = "body_field";
+    private static final String FIELD_CONTENTTYPE_FIELD ="content_type";
     private static final String FIELD_ROUTING = "routing";
     private static final String FIELD_DELIVERYTAG_FIELD = "deliverytag_field";
     private static final String FIELD_LIMIT = "limit";
@@ -73,6 +74,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
     private static final String DEFAULT_BODY_FIELD = "message";
     private static final String DEFAULT_DELIVERYTAG_FIELD = "amqpdeliverytag";
+    private static final String DEFAULT_CONTENTTYPE_FIELD = "amqpcontenttype";
     private static final String DEFAULT_EXCHTYPE   = AMQPPluginData.EXCHTYPE_DIRECT;
 
     private String uri;
@@ -97,6 +99,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
     private boolean transactional   = false;
     private String bodyField        = DEFAULT_BODY_FIELD;
     private String deliveryTagField = DEFAULT_DELIVERYTAG_FIELD;
+    private String contentTypeField = DEFAULT_CONTENTTYPE_FIELD;
     public String ackStepName                = null;
     public String ackStepDeliveryTagField    = null;
     public String rejectStepName             = null;
@@ -203,6 +206,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
 
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_TRANSACTIONAL, isTransactional()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_BODY_FIELD, getBodyField()));
+        bufer.append("   ").append(XMLHandler.addTagValue(FIELD_CONTENTTYPE_FIELD, getContentTypeField()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_DELIVERYTAG_FIELD, getDeliveryTagField()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_LIMIT, getLimitString()));
         bufer.append("   ").append(XMLHandler.addTagValue(FIELD_PREFETCHCOUNT, getPrefetchCountString()));
@@ -251,6 +255,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         try {
             setTransactional(XMLHandler.getTagValue(stepnode, FIELD_TRANSACTIONAL));
             setBodyField(XMLHandler.getTagValue(stepnode, FIELD_BODY_FIELD));
+            setContentTypeField(XMLHandler.getTagValue(stepnode, FIELD_CONTENTTYPE_FIELD));
             setDeliveryTagField(XMLHandler.getTagValue(stepnode, FIELD_DELIVERYTAG_FIELD));
             setRouting(XMLHandler.getTagValue(stepnode, FIELD_ROUTING));
             setTarget(XMLHandler.getTagValue(stepnode, FIELD_TARGET));
@@ -305,6 +310,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         try {
             setTransactional(rep.getStepAttributeString(idStep, FIELD_TRANSACTIONAL));
             setBodyField(rep.getStepAttributeString(idStep, FIELD_BODY_FIELD));
+            setContentTypeField(rep.getStepAttributeString(idStep, FIELD_CONTENTTYPE_FIELD));
             setDeliveryTagField(rep.getStepAttributeString(idStep, FIELD_DELIVERYTAG_FIELD));
             setRouting(rep.getStepAttributeString(idStep, FIELD_ROUTING));
             setTarget(rep.getStepAttributeString(idStep, FIELD_TARGET));
@@ -358,6 +364,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         try {
             rep.saveStepAttribute(idTransformation, idStep, FIELD_TRANSACTIONAL, isTransactional());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_BODY_FIELD, getBodyField());
+            rep.saveStepAttribute(idTransformation, idStep, FIELD_CONTENTTYPE_FIELD, getContentTypeField());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_DELIVERYTAG_FIELD, getDeliveryTagField());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_LIMIT, getLimitString());
             rep.saveStepAttribute(idTransformation, idStep, FIELD_PREFETCHCOUNT, getPrefetchCountString());
@@ -408,6 +415,7 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.mode            = AMQPPluginData.MODE_CONSUMER;
         this.bodyField       = DEFAULT_BODY_FIELD;
         this.deliveryTagField = DEFAULT_DELIVERYTAG_FIELD;
+        this.contentTypeField = DEFAULT_CONTENTTYPE_FIELD;
         this.exchtype        = DEFAULT_EXCHTYPE;
         this.username        = "";
         this.password        = "";
@@ -690,6 +698,15 @@ public class AMQPPluginMeta extends BaseStepMeta implements StepMetaInterface
         this.routing = routing;
     }
 
+    public String getContentTypeField()
+    {
+        return contentTypeField;
+    }
+
+    public void setContentTypeField(String val)
+    {
+        this.contentTypeField = val;
+    }
 
     public String getDeliveryTagField()
     {

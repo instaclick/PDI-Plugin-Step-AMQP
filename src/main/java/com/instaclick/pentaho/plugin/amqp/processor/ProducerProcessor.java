@@ -4,6 +4,7 @@ import com.instaclick.pentaho.plugin.amqp.initializer.Initializer;
 import com.instaclick.pentaho.plugin.amqp.AMQPPlugin;
 import com.instaclick.pentaho.plugin.amqp.AMQPPluginData;
 import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.AMQP;
 import java.io.IOException;
 import java.util.List;
 import org.pentaho.di.core.exception.KettleStepException;
@@ -31,12 +32,20 @@ public class ProducerProcessor extends BaseProcessor
         }
 
         data.body    = getAmqpBody(r);
+        data.content_type = (data.contentTypeIndex != null)
+            ? getAmqpContentType(r)
+            : "";
+
         data.routing = (data.routingIndex != null)
             ? getAmqpRoutingKey(r)
             : "";
 
         // publish the current message
-        channel.basicPublish(data.target, data.routing, null, data.body.getBytes());
+        channel.basicPublish(data.target, data.routing, 
+            new AMQP.BasicProperties.Builder()
+                .contentType(data.content_type)
+                .build(),
+            data.body.getBytes());
 
         // put the row to the output row stream
         plugin.putRow(data.outputRowMeta, r);

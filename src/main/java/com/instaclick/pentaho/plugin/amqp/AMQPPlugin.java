@@ -141,6 +141,7 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
         Integer port    = null;
         String body     = environmentSubstitute(meta.getBodyField());
+        String contentTypeField = environmentSubstitute(meta.getContentTypeField());
         String routing  = environmentSubstitute(meta.getRouting());
         String uri      = environmentSubstitute(meta.getUri());
         String host     = environmentSubstitute(meta.getHost());
@@ -209,6 +210,14 @@ public class AMQPPlugin extends BaseStep implements StepInterface
 
             if (data.deliveryTagIndex < 0) {
                 throw new AMQPException("Unable to retrieve DeliveryTag field : " + deliveryTagField);
+            }
+        }
+
+        if ( ! Const.isEmpty(contentTypeField)) {
+            data.contentTypeIndex = data.outputRowMeta.indexOfValue(contentTypeField);
+
+            if (data.contentTypeIndex < 0) {
+                throw new AMQPException("Unable to retrieve ContentType field : " + contentTypeField);
             }
         }
 

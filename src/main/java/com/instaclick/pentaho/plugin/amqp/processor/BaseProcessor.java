@@ -45,9 +45,25 @@ abstract class BaseProcessor implements Processor
         return null;
     }
 
+    protected String getAmqpContentType(final Object[] r) throws KettleStepException
+    {
+        if (hasAmqpContentType(r)) {
+            return (r[data.contentTypeIndex] == null) ? null : r[data.contentTypeIndex].toString();
+        }
+
+        logUndefinedRow(r, "Invalid content type", "ICAmqpPlugin003");
+
+        return null;
+    }
+
     protected boolean hasAmqpRoutingKey(final Object[] r)
     {
         return rowContains(r, data.routingIndex);
+    }
+
+    protected boolean hasAmqpContentType(final Object[] r)
+    {
+        return rowContains(r, data.contentTypeIndex);
     }
 
     protected boolean hasAmqpBody(final Object[] r)
