@@ -160,6 +160,11 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
     private FormData formBodyLabel;
     private FormData formBodyText;
 
+    private Label labelContentTypeField;
+    private TextVar textContentTypeField;
+    private FormData formContentTypeLabel;
+    private FormData formContentTypeText;
+
     private Label labelDeliveryTagField;
     private TextVar textDeliveryTagField;
     private FormData formDeliveryTagLabel;
@@ -600,6 +605,30 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
 
         textBodyField.setLayoutData(formBodyText);
 
+         // ContentType line
+        labelContentTypeField = new Label(wConnectionComp, SWT.RIGHT);
+        labelContentTypeField.setText(getString("AmqpPlugin.ContentType.Label"));
+        props.setLook(labelContentTypeField);
+
+        formContentTypeLabel       = new FormData();
+        formContentTypeLabel.left  = new FormAttachment(0, 0);
+        formContentTypeLabel.right = new FormAttachment(middle, -margin);
+        formContentTypeLabel.top   = new FormAttachment(textBodyField , margin);
+
+        labelContentTypeField.setLayoutData(formContentTypeLabel);
+
+        textContentTypeField = new TextVar(transMeta, wConnectionComp, SWT.MULTI | SWT.LEFT | SWT.BORDER);
+
+        props.setLook(textContentTypeField);
+        textContentTypeField.addModifyListener(modifyListener);
+
+        formContentTypeText        = new FormData();
+        formContentTypeText.left   = new FormAttachment(middle, 0);
+        formContentTypeText.right  = new FormAttachment(100, 0);
+        formContentTypeText.top    = new FormAttachment(textBodyField, margin);
+
+        textContentTypeField.setLayoutData(formContentTypeText);
+
         // DeliveryTag
         labelDeliveryTagField = new Label(wConnectionComp, SWT.RIGHT);
         labelDeliveryTagField.setText(getString("AmqpPlugin.DeliveryTag.Label"));
@@ -608,7 +637,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formDeliveryTagLabel       = new FormData();
         formDeliveryTagLabel.left  = new FormAttachment(0, 0);
         formDeliveryTagLabel.right = new FormAttachment(middle, -margin);
-        formDeliveryTagLabel.top   = new FormAttachment(textBodyField , margin);
+        formDeliveryTagLabel.top   = new FormAttachment(textContentTypeField , margin);
 
         labelDeliveryTagField.setLayoutData(formDeliveryTagLabel);
 
@@ -620,7 +649,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         formDeliveryTagText        = new FormData();
         formDeliveryTagText.left   = new FormAttachment(middle, 0);
         formDeliveryTagText.right  = new FormAttachment(100, 0);
-        formDeliveryTagText.top    = new FormAttachment(textBodyField, margin);
+        formDeliveryTagText.top    = new FormAttachment(textContentTypeField, margin);
 
         textDeliveryTagField.setLayoutData(formDeliveryTagText);
 
@@ -1299,6 +1328,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         setFieldText(textUsername, input.getUsername());
         setFieldText(textPassword, input.getPassword());
         setFieldText(textBodyField, input.getBodyField());
+        setFieldText(textContentTypeField, input.getContentTypeField());
         setFieldText(textDeliveryTagField, input.getDeliveryTagField());
 
         setFieldText(textAckStepName, input.getAckStepName());
@@ -1352,6 +1382,7 @@ public class AMQPPluginDialog extends BaseStepDialog implements StepDialogInterf
         input.setUri(getFieldText(textURI));
         input.setTarget(getFieldText(textTarget));
         input.setBodyField(getFieldText(textBodyField));
+        input.setContentTypeField(getFieldText(textContentTypeField));
         input.setDeliveryTagField(getFieldText(textDeliveryTagField));
 
         input.setUsername(getFieldText(textUsername));

@@ -36,6 +36,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
     public boolean isRequeue = false;
     public String exchtype = "";
     public String body = null;
+    public String content_type = null;
     public String routing;
     public String target;
     public long amqpTag;
@@ -56,6 +57,7 @@ public class AMQPPluginData extends BaseStepData implements StepDataInterface
 
     // Delayed confirmation realted
     public Integer deliveryTagIndex = null;
+    public Integer contentTypeIndex = null;
 
     public boolean activeConfirmation = false;
     public String ackStepName = null;
